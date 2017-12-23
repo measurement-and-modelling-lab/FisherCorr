@@ -10,14 +10,12 @@ data <- matrix(c(
 hypothesis <- matrix(c(1, 1, 1,
                        2, 3, 3,
 					   1, 1, 2,
-					   1, 1, 1,
+					   0, 0, 0,
 					   0, 0, 0), nrow=3, ncol=5)
 
 N = 50
 
 delta <- makedelta(hypothesis)
-k <- nrow(delta)
-q <- ncol(delta)
 
 rows <- nrow(hypothesis)
 correlations <- c(0)
@@ -29,15 +27,13 @@ for (jj in 1:rows) {
 
 rhostar <- hypothesis[,5]
 
-if (is.null(delta)) { # I think this is right but I'm not sure
+if (is.null(delta)) {
 	rhoLS <- rhostar
 } else {
 	gammaLS <- solve(t(delta)%*%delta)%*%t(delta)%*%(correlations - rhostar)
 	rhoLS <- delta%*%gammaLS + rhostar
 }
 Rlist <- data
-
-
 
 rows <- nrow(hypothesis)
 for (jj in 1:rows) {
@@ -67,11 +63,11 @@ for (jj in 1:rows) {
 sigmaLS <- Psi
 
 if (is.null(delta)) { # not sure what this should be
-	gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
-	rhoGLS <- delta%*%gammaGLS + rhostar
+	e <- correlations - rhostar
 } else {
 	gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
 	rhoGLS <- delta%*%gammaGLS + rhostar
+	e <- z(correlations) - z(rhoGLS)
 }
 
 Rlist2 <- data
@@ -94,8 +90,16 @@ for (jj in 1:rows) {
 	}
 }
 
-X2 <- (N - 3)*t((z(correlations) - z(rhoGLS)))%*%solve(SLS)%*%(z(correlations) - z(rhoGLS))
-cat('X2 =',X2,'\n')
+X2 <- (N - 3)*t(e)%*%solve(SLS)%*%e
 
-p <- dchisq(X2, df=(k-q))
+k <- nrow(data)
+if (is.null(delta)) {
+	q <- 0
+} else {
+	q <- ncol(delta)
+}
+
+p <- pchisq(X2, df=(k-q), lower.tail = FALSE)
+
+cat('X2 =',X2,'\n')
 cat('p-value =',p,'\n')
