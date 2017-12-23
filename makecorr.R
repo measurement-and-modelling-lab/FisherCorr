@@ -1,4 +1,5 @@
 function (data, deletion) {
+  compute4thOrderMoments <- dget("compute4thOrderMoments.r")
 	RList <- list()
 	moments <-list()
 
