@@ -1,6 +1,7 @@
 z <- dget("fisherz.R")
-makesymmetric <- dget("MakeSymmetricMatrix.R")
 makedelta <- dget("MakeDeltaFromHypothesis.R")
+
+estimationmethod <- 'TSGLS'
 
 data <- matrix(c(
 1,0.08,0.03,
@@ -10,16 +11,16 @@ data <- matrix(c(
 hypothesis <- matrix(c(1, 1, 1,
                        2, 3, 3,
 					   1, 1, 2,
-					   0, 0, 0,
+					   1, 1, 1,
 					   0, 0, 0), nrow=3, ncol=5)
 
 N = 50
 
 delta <- makedelta(hypothesis)
 
-rows <- nrow(hypothesis)
+hypothesis_rows <- nrow(hypothesis)
 correlations <- c(0)
-for (jj in 1:rows) {
+for (jj in 1:hypothesis_rows) {
 	j <- hypothesis[jj,2]
 	k <- hypothesis[jj,3]
 	correlations[jj] <- data[j,k]
@@ -33,36 +34,38 @@ if (is.null(delta)) {
 	gammaLS <- solve(t(delta)%*%delta)%*%t(delta)%*%(correlations - rhostar)
 	rhoLS <- delta%*%gammaLS + rhostar
 }
+
 Rlist <- data
 
-rows <- nrow(hypothesis)
-for (jj in 1:rows) {
-	j <- hypothesis[jj,2]
-	k <- hypothesis[jj,3]
-	Rlist[j,k] <- rhoLS[jj]
-	Rlist[k,j] <- rhoLS[jj]
+if (estimationmethod == 'TSGLS') { # I think this conditional gives us GLS and TSGLS
+	for (jj in 1:hypothesis_rows) {
+		j <- hypothesis[jj,2]
+		k <- hypothesis[jj,3]
+		Rlist[j,k] <- rhoLS[jj]
+		Rlist[k,j] <- rhoLS[jj]
+	}
 }
 
 Psi <- matrix(0, nrow=rows, ncol=rows)
-for (jj in 1:rows) {
+for (jj in 1:hypothesis_rows) {
     for (kk in 1:jj) {
         j <- hypothesis[jj,2]
         k <- hypothesis[jj,3]
         h <- hypothesis[kk,2]
         m <- hypothesis[kk,3]
 
-  			term1 <- ((Rlist[j,h] - Rlist[j,k]*Rlist[k,h])*(Rlist[k,m] - Rlist[k,h]*Rlist[h,m]))
-  			term2 <- ((Rlist[j,m] - Rlist[j,h]*Rlist[h,m])*(Rlist[k,h] - Rlist[k,j]*Rlist[j,h]))
-  			term3 <- ((Rlist[j,h] - Rlist[j,m]*Rlist[m,h])*(Rlist[k,m] - Rlist[k,j]*Rlist[j,m]))
-  			term4 <- ((Rlist[j,m] - Rlist[j,k]*Rlist[k,m])*(Rlist[k,h] - Rlist[k,m]*Rlist[m,h]))
-  			Psi[jj,kk] <- 0.5*(term1 + term2 + term3 + term4)
-  			Psi[kk,jj] <- 0.5*(term1 + term2 + term3 + term4)
+		term1 <- ((Rlist[j,h] - Rlist[j,k]*Rlist[k,h])*(Rlist[k,m] - Rlist[k,h]*Rlist[h,m]))
+		term2 <- ((Rlist[j,m] - Rlist[j,h]*Rlist[h,m])*(Rlist[k,h] - Rlist[k,j]*Rlist[j,h]))
+		term3 <- ((Rlist[j,h] - Rlist[j,m]*Rlist[m,h])*(Rlist[k,m] - Rlist[k,j]*Rlist[j,m]))
+		term4 <- ((Rlist[j,m] - Rlist[j,k]*Rlist[k,m])*(Rlist[k,h] - Rlist[k,m]*Rlist[m,h]))
+		Psi[jj,kk] <- 0.5*(term1 + term2 + term3 + term4)
+		Psi[kk,jj] <- 0.5*(term1 + term2 + term3 + term4)
 	}
 }
 
 sigmaLS <- Psi
 
-if (is.null(delta)) { # not sure what this should be
+if (is.null(delta)) {
 	e <- correlations - rhostar
 } else {
 	gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
@@ -71,15 +74,14 @@ if (is.null(delta)) { # not sure what this should be
 }
 
 Rlist2 <- data
-rows <- nrow(hypothesis)
-for (jj in 1:rows) {
+for (jj in 1:hypothesis_rows) {
 	j <- hypothesis[jj,2]
 	k <- hypothesis[jj,3]
 	Rlist2[j,k] <- rhoGLS[jj]
 }
 
-SLS <- matrix(0, nrow=rows, ncol=rows)
-for (jj in 1:rows) {
+SLS <- matrix(0, nrow=hypothesis_rows, ncol=hypothesis_rows)
+for (jj in 1:hypothesis_rows) {
     for (kk in 1:jj) {
         j <- hypothesis[jj,2]
         k <- hypothesis[jj,3]
