@@ -7,6 +7,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	findpos <- dget("findpos.r")
 	FRHO <- dget("FRHO.r")
 	makecorr <- dget("makecorr.R")
+	tablegen <- dget("tablegen.r")
 
 	#estimationmethod <- 'ADF'
 	#datatype <- 'rawdata'
@@ -112,6 +113,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	}
 
 	X2 <- (N - 3)*t(e)%*%solve(SLS)%*%e
+	X2 <- round(X2, 3)
 
 	k <- nrow(data)
 	if (is.null(delta)) {
@@ -121,10 +123,25 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	}
 
 	p <- pchisq(X2, df=(k-q), lower.tail = FALSE)
+	p <- round(p, 3)
+	
 
-	cat('X2=',X2,'<br>Sig.=',p)
-	#cat('X2 =',X2,'\n')
-	#cat('p-value =',p,'\n')
-	#print(X2)
+	printfunction <- function () {
+	  
+	  cat('<br>')
+	  hypothesis <- rbind(c("Group", "Row", "Column", "Parameter Tag", "Fixed Value"), hypothesis)
+	  tablegen(hypothesis,TRUE)
+	  
+	  cat('<br>')
+	  data <- round(data, 3)
+	  tablegen(data,FALSE)
+	  
+	  cat('<br>')
+	  results <- matrix(c('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&chi;&sup2;', X2, '&nbsp;&nbsp;df', k-q, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', p), nrow=2, ncol=3)
+	  tablegen(results,TRUE)
+	}
+	
+	x <- capture.output(printfunction())
+	cat(x)
 
 }
