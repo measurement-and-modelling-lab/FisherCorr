@@ -28,9 +28,16 @@ for (jj in 1:rows) {
 }
 
 rhostar <- hypothesis[,5]
-gammaLS <- solve(t(delta)%*%delta)%*%t(delta)%*%(correlations - rhostar)
-rhoLS <- delta%*%gammaLS + rhostar
+
+if (is.null(delta)) { # I think this is right but I'm not sure
+	rhoLS <- rhostar
+} else {
+	gammaLS <- solve(t(delta)%*%delta)%*%t(delta)%*%(correlations - rhostar)
+	rhoLS <- delta%*%gammaLS + rhostar
+}
 Rlist <- data
+
+
 
 rows <- nrow(hypothesis)
 for (jj in 1:rows) {
@@ -59,9 +66,13 @@ for (jj in 1:rows) {
 
 sigmaLS <- Psi
 
-gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
-
-rhoGLS <- delta%*%gammaGLS + rhostar
+if (is.null(delta)) { # not sure what this should be
+	gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
+	rhoGLS <- delta%*%gammaGLS + rhostar
+} else {
+	gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
+	rhoGLS <- delta%*%gammaGLS + rhostar
+}
 
 Rlist2 <- data
 rows <- nrow(hypothesis)
@@ -79,6 +90,7 @@ for (jj in 1:rows) {
         h <- hypothesis[kk,2]
         m <- hypothesis[kk,3]
 		SLS[jj,kk] <- sigmaLS[jj,kk]/(1 - Rlist2[j,k]^2)*(1 - Rlist2[h,m]^2)
+		#SLS[kk,jj] <- sigmaLS[jj,kk]/(1 - Rlist2[j,k]^2)*(1 - Rlist2[h,m]^2) # if this is added then the result is different from Multicor---shouldn't it be symmetric though?
 	}
 }
 
