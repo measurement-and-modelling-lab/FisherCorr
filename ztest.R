@@ -1,20 +1,29 @@
 z <- dget("fisherz.R")
 makedelta <- dget("MakeDeltaFromHypothesis.R")
+adfCov <- dget("adfCov.r")
+compute4thOrderMoments <- dget("compute4thOrderMoments.r")
+findpos <- dget("findpos.r")
+FRHO <- dget("FRHO.r")
+makecorr <- dget("makecorr.R")
 
 estimationmethod <- 'TSGLS'
+datatype <- 'rawdata'
+deletion <- 'pairwise'
+N <- 50
 
-data <- matrix(c(
-1,0.08,0.03,
-0.08,1,0.11,
-0.03,0.11,1), nrow=3, ncol=3)
+data <- read.csv(file='data1.csv',head=FALSE,sep=",")
+data <- as.matrix(data)
 
-hypothesis <- matrix(c(1, 1, 1,
-                       2, 3, 3,
-					   1, 1, 2,
-					   1, 1, 1,
-					   0, 0, 0), nrow=3, ncol=5)
+hypothesis <- read.csv(file='hypothesis1.csv',head=FALSE,sep=",")
+hypothesis <- as.matrix(hypothesis)
 
-N = 50
+# Produce the correlation matrix using raw data, with pairwise deletion if requested
+if (datatype == 'rawdata'){
+	N <- nrow(data)
+	output <- makecorr(data, deletion)
+	data <- output[[1]]
+    moments <- output[[2]]
+}
 
 delta <- makedelta(hypothesis)
 
@@ -37,7 +46,7 @@ if (is.null(delta)) {
 
 Rlist <- data
 
-if (estimationmethod == 'TSGLS') { # I think this conditional gives us GLS and TSGLS
+if (estimationmethod %in% c('TSGLS', 'TSADF')) { # I think this conditional gives us GLS and TSGLS
 	for (jj in 1:hypothesis_rows) {
 		j <- hypothesis[jj,2]
 		k <- hypothesis[jj,3]
@@ -46,7 +55,7 @@ if (estimationmethod == 'TSGLS') { # I think this conditional gives us GLS and T
 	}
 }
 
-Psi <- matrix(0, nrow=rows, ncol=rows)
+Psi <- matrix(0, nrow=hypothesis_rows, ncol=hypothesis_rows)
 for (jj in 1:hypothesis_rows) {
     for (kk in 1:jj) {
         j <- hypothesis[jj,2]
@@ -54,12 +63,21 @@ for (jj in 1:hypothesis_rows) {
         h <- hypothesis[kk,2]
         m <- hypothesis[kk,3]
 
-		term1 <- ((Rlist[j,h] - Rlist[j,k]*Rlist[k,h])*(Rlist[k,m] - Rlist[k,h]*Rlist[h,m]))
-		term2 <- ((Rlist[j,m] - Rlist[j,h]*Rlist[h,m])*(Rlist[k,h] - Rlist[k,j]*Rlist[j,h]))
-		term3 <- ((Rlist[j,h] - Rlist[j,m]*Rlist[m,h])*(Rlist[k,m] - Rlist[k,j]*Rlist[j,m]))
-		term4 <- ((Rlist[j,m] - Rlist[j,k]*Rlist[k,m])*(Rlist[k,h] - Rlist[k,m]*Rlist[m,h]))
-		Psi[jj,kk] <- 0.5*(term1 + term2 + term3 + term4)
-		Psi[kk,jj] <- 0.5*(term1 + term2 + term3 + term4)
+		if (estimationmethod %in% c('GLS', 'TSGLS')) {
+			term1 <- ((Rlist[j,h] - Rlist[j,k]*Rlist[k,h])*(Rlist[k,m] - Rlist[k,h]*Rlist[h,m]))
+			term2 <- ((Rlist[j,m] - Rlist[j,h]*Rlist[h,m])*(Rlist[k,h] - Rlist[k,j]*Rlist[j,h]))
+			term3 <- ((Rlist[j,h] - Rlist[j,m]*Rlist[m,h])*(Rlist[k,m] - Rlist[k,j]*Rlist[j,m]))
+			term4 <- ((Rlist[j,m] - Rlist[j,k]*Rlist[k,m])*(Rlist[k,h] - Rlist[k,m]*Rlist[m,h]))
+			Psi[jj,kk] <- 0.5*(term1 + term2 + term3 + term4)
+			Psi[kk,jj] <- 0.5*(term1 + term2 + term3 + term4)
+		} else {
+			term1 <- FRHO(j,k,h,m,moments)
+			term2 <- 1/4*Rlist[j,k]*Rlist[h,m]*(FRHO(j,j,h,h,moments) + FRHO(k,k,h,h,moments) + FRHO(j,j,m,m,moments) + FRHO(k,k,m,m,moments))
+			term3 <- 1/2*Rlist[j,k]*(FRHO(j,j,h,m,moments) + FRHO(k,k,h,m,moments))
+			term4 <- 1/2*Rlist[h,m]*(FRHO(j,k,h,h,moments) + FRHO(j,k,m,m,moments))
+        	Psi[jj,kk] <- (term1 + term2 - term3 - term4)
+        	Psi[kk,jj] <- (term1 + term2 - term3 - term4)
+		}
 	}
 }
 
