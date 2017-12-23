@@ -9,18 +9,15 @@ data <- matrix(c(
 
 hypothesis <- matrix(c(1, 1, 1,
                        2, 3, 3,
-          					   1, 1, 2,
-          					   1, 1, 1,
-          					   0, 0, 0), nrow=3, ncol=5)
+					   1, 1, 2,
+					   1, 1, 1,
+					   0, 0, 0), nrow=3, ncol=5)
 
 N = 50
+
+delta <- makedelta(hypothesis)
 k <- nrow(delta)
 q <- ncol(delta)
-
-
-
-					   
-delta <- makedelta(hypothesis)	   
 
 rows <- nrow(hypothesis)
 correlations <- c(0)
@@ -40,9 +37,8 @@ for (jj in 1:rows) {
 	j <- hypothesis[jj,2]
 	k <- hypothesis[jj,3]
 	Rlist[j,k] <- rhoLS[jj]
+	Rlist[k,j] <- rhoLS[jj]
 }
-
-Rlist <- makesymmetric(Rlist)
 
 Psi <- matrix(0, nrow=rows, ncol=rows)
 for (jj in 1:rows) {
@@ -56,11 +52,12 @@ for (jj in 1:rows) {
   			term2 <- ((Rlist[j,m] - Rlist[j,h]*Rlist[h,m])*(Rlist[k,h] - Rlist[k,j]*Rlist[j,h]))
   			term3 <- ((Rlist[j,h] - Rlist[j,m]*Rlist[m,h])*(Rlist[k,m] - Rlist[k,j]*Rlist[j,m]))
   			term4 <- ((Rlist[j,m] - Rlist[j,k]*Rlist[k,m])*(Rlist[k,h] - Rlist[k,m]*Rlist[m,h]))
-  			Psi[[jj,kk]] <- 0.5*(term1 + term2 + term3 + term4)
+  			Psi[jj,kk] <- 0.5*(term1 + term2 + term3 + term4)
+  			Psi[kk,jj] <- 0.5*(term1 + term2 + term3 + term4)
 	}
 }
 
-sigmaLS <- makesymmetric(Psi)
+sigmaLS <- Psi
 
 gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
 
@@ -86,8 +83,7 @@ for (jj in 1:rows) {
 }
 
 X2 <- (N - 3)*t((z(correlations) - z(rhoGLS)))%*%solve(SLS)%*%(z(correlations) - z(rhoGLS))
-cat('X2=',X2)
+cat('X2 =',X2,'\n')
 
-
-p <- pchisq(X2, df=(k-q), lower.tail=FALSE)
-cat('p-value=',p)
+p <- dchisq(X2, df=(k-q))
+cat('p-value =',p,'\n')
