@@ -8,17 +8,19 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	FRHO <- dget("FRHO.r")
 	makecorr <- dget("makecorr.R")
 	tablegen <- dget("tablegen.r")
+	errorcheck <- dget("errorcheck.r")
+	
+	
+	if (deletion == 'listwise') { # apply listwise deletion
+	    temp1 <- suppressWarnings(as.numeric(data))
+	    temp1 <- matrix(temp1, nrow=nrow(data), ncol=ncol(data))
+	    data <- temp1[complete.cases(temp1),]
+	}
 
-	#estimationmethod <- 'ADF'
-	#datatype <- 'rawdata'
-	#deletion <- 'pairwise'
-	#N <- 50
-
-	#data <- read.csv(file='data1.csv',head=FALSE,sep=",")
-	#data <- as.matrix(data)
-
-	#hypothesis <- read.csv(file='hypothesis1.csv',head=FALSE,sep=",")
-	#hypothesis <- as.matrix(hypothesis)
+	error <- errorcheck(data, datatype, hypothesis,deletion)
+	if (error == TRUE) {
+	  return(invisible())
+	}
 
 	# Produce the correlation matrix using raw data, with pairwise deletion if requested
 	if (datatype == 'rawdata'){
@@ -26,6 +28,8 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 		data <- output[[1]]
 		moments <- output[[2]]
 	}
+	
+	
 
 	delta <- makedelta(hypothesis)
 
@@ -86,6 +90,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	sigmaLS <- Psi
 
 	if (is.null(delta)) {
+	  rhoGLS <- rhostar
 		e <- correlations - rhostar
 	} else {
 		gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
@@ -124,20 +129,30 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 	p <- pchisq(X2, df=(k-q), lower.tail = FALSE)
 	p <- round(p, 3)
-	
+
 
 	printfunction <- function () {
 	  
-	  cat('<br>')
+	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Hypothesis Matrix</b></div>', sep="")
 	  hypothesis <- rbind(c("Group", "Row", "Column", "Parameter Tag", "Fixed Value"), hypothesis)
 	  tablegen(hypothesis,TRUE)
-	  
-	  cat('<br>')
+
+	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Input Correlation Matrix (N=', N, ')</b></div>', sep="")
 	  data <- round(data, 3)
 	  tablegen(data,FALSE)
+
+	  if (!(is.null(delta))) {
+	    cat('<br><div style="line-height: 175%; margin-left:15px"><b>', estimationmethod, 'Parameter Estimates</b></div>')
+	    title <- c('Parameter Tag', 'Estimate')
+	    gammaGLS <- round(gammaGLS, 3)
+	    numbers <- c(1:length(gammaGLS))
+	    gammaGLS <- cbind(numbers, gammaGLS)
+	    gammaGLS <- rbind(title, gammaGLS)
+	    tablegen(gammaGLS,TRUE)
+	  }
 	  
-	  cat('<br>')
-	  results <- matrix(c('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&chi;&sup2;', X2, '&nbsp;&nbsp;df', k-q, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', p), nrow=2, ncol=3)
+	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Significance Test Results</b></div>', sep="")
+	  results <- matrix(c('Chi Square', X2, '&nbsp;&nbsp;df', k-q, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', p), nrow=2, ncol=3)
 	  tablegen(results,TRUE)
 	}
 	

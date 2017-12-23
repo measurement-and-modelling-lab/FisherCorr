@@ -39,7 +39,7 @@ shinyServer(function(input, output, session) {
 		# Import N (calculate if raw data) for each group
         NList <- c()
         if (input$datatype == 'correlation') {
-			    N <- input$N
+			    N <- as.numeric(input$N)
         } else {
 			    N <- nrow(data)
         }
