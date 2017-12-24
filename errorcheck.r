@@ -34,14 +34,14 @@ function (data, datatype, hypothesis, deletion) {
 
 	if (datatype == 'rawdata') {
 		if (nrow(data) <= ncol(data)) {
-			cat('<br>Error: Either data matrix #', jj, ' is a correlation matrix, or it is a raw data matrix where n <= p.', sep="")
+			cat('<br>Error: Either the data matrix is a correlation matrix, or it is a raw data matrix where n <= p.', sep="")
 			return(invisible(TRUE))
 		} else if (deletion == 'pairwise') {
 			m <- data
 			data <- m[rowSums(is.na(m))!=ncol(m), ]
 			colCheck <- m[,colSums(is.na(m))!=nrow(m)]
 			if(ncol(colCheck) != ncol(m)){
-			  cat('<br>Error: data matrix #', jj, ' has at least one empty column.', sep="")
+			  cat('<br>Error: The data matrix has at least one empty column.', sep="")
 			  return(invisible(TRUE))
 			}
 		}
@@ -59,10 +59,10 @@ function (data, datatype, hypothesis, deletion) {
 
 	if (deletion == 'no') {
 		if (TRUE %in% is.na(data)) {
-			cat('<br>Error: Data matrix #', jj, ' has at least one empty entry.', sep="")
+			cat('<br>Error: The data matrix has at least one empty entry.', sep="")
 			return(invisible(TRUE))
 		} else if (is.numeric(data) == FALSE) {
-			cat('<br>Error: Data matrix #', jj, ' has at least one non-numeric entry.', sep="")
+			cat('<br>Error: The data matrix has at least one non-numeric entry.', sep="")
 			return(invisible(TRUE))
 		}
 	}

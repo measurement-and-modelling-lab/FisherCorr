@@ -15,6 +15,14 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	    temp1 <- suppressWarnings(as.numeric(data))
 	    temp1 <- matrix(temp1, nrow=nrow(data), ncol=ncol(data))
 	    data <- temp1[complete.cases(temp1),]
+	    N <- nrow(data)
+	}
+	
+	if (deletion == 'pairwise') {
+	  ns <- colSums(!is.na(data))
+	  hmean <- 1/mean(1/ns)
+	  hmean <- round(hmean, 1)
+	  N <- hmean
 	}
 
 	error <- errorcheck(data, datatype, hypothesis,deletion)
@@ -162,6 +170,10 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Input Correlation Matrix (N=', N, ')</b></div>', sep="")
 	  data <- round(data, 3)
 	  tablegen(data,FALSE)
+	  
+	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>OLS Estimates</b></div>', sep="")
+	  Rlist <- round(Rlist, 3)
+	  tablegen(Rlist,FALSE)
 
 	  if (!(is.null(delta))) {
 	    cat('<br><div style="line-height: 175%; margin-left:15px"><b>', estimationmethod, 'Parameter Estimates</b></div>')
