@@ -86,6 +86,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 			}
 		}
 	}
+	
 
 	sigmaLS <- Psi
 
@@ -96,7 +97,28 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 		gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
 		rhoGLS <- delta%*%gammaGLS + rhostar
 		e <- z(correlations) - z(rhoGLS)
+		
+		# variance of parameter tag estimates---differs from WBCORR but that might be correct
+		nMatrix <- diag(rep(N, hypothesis_rows))
+		OmegaHatInverse <- sqrt(nMatrix)%*%solve(Psi)%*%sqrt(nMatrix)
+		Psi <- t(delta)%*%OmegaHatInverse
+		covgamma <- solve(Psi%*%delta)
+		covgamma <- round(covgamma, 3)
+		
+		# confidence interval on parameter tag estimates
+		gammaGLS_ci <- lapply(gammaGLS, function(x) {
+		  UL <- z(x) + 1.96*sqrt(1/(N-3))
+		  UL <- tanh(UL)
+		  UL <- round(UL, 3)
+		  LL <- z(x) - 1.96*sqrt(1/(N-3))
+		  LL <- tanh(LL)
+		  LL <- round(LL, 3)
+		  return(paste0('[',LL,', ',UL,']'))
+		})
+		gammaGLS_ci <- unlist(gammaGLS_ci)
 	}
+	
+
 
 	Rlist2 <- data
 	for (jj in 1:hypothesis_rows) {
@@ -143,10 +165,10 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 	  if (!(is.null(delta))) {
 	    cat('<br><div style="line-height: 175%; margin-left:15px"><b>', estimationmethod, 'Parameter Estimates</b></div>')
-	    title <- c('Parameter Tag', 'Estimate')
+	    title <- c('Parameter Tag', 'Estimate', 'Std. Error', '95% Confidence Interval')
 	    gammaGLS <- round(gammaGLS, 3)
 	    numbers <- c(1:length(gammaGLS))
-	    gammaGLS <- cbind(numbers, gammaGLS)
+	    gammaGLS <- cbind(numbers, gammaGLS, covgamma, gammaGLS_ci)
 	    gammaGLS <- rbind(title, gammaGLS)
 	    tablegen(gammaGLS,TRUE)
 	  }
