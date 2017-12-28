@@ -12,10 +12,3 @@ for (i in 1:nrow(matrix))
 
 return ((n-3)*sum)
 }
-matrix <- matrix(c(.1,.2,.3,.4,
-                   .4,.5,.6,.5,
-                   .1,.2,.4,.6,
-                   .7,.8,.8,.8), nrow = 4, ncol = 4)  
-n <- 20
-
-print(sCalc(matrix,n))
