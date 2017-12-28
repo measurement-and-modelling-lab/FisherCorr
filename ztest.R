@@ -112,21 +112,23 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 		Psi <- t(delta)%*%OmegaHatInverse
 		covgamma <- solve(Psi%*%delta)
 		covgamma <- round(covgamma, 3)
-		
+		covgamma <- covgamma[,1]
+
 		# confidence interval on parameter tag estimates
+		number_of_parameters <- length(gammaGLS)
+		corrected_alpha <- 0.05/number_of_parameters
+		critical_value <- qnorm(1-corrected_alpha/2)
 		gammaGLS_ci <- lapply(gammaGLS, function(x) {
-		  UL <- z(x) + 1.96*sqrt(1/(N-3))
+		  UL <- z(x) + critical_value*sqrt(1/(N-3))
 		  UL <- tanh(UL)
 		  UL <- round(UL, 3)
-		  LL <- z(x) - 1.96*sqrt(1/(N-3))
+		  LL <- z(x) - critical_value*sqrt(1/(N-3))
 		  LL <- tanh(LL)
 		  LL <- round(LL, 3)
 		  return(paste0('[',LL,', ',UL,']'))
 		})
 		gammaGLS_ci <- unlist(gammaGLS_ci)
 	}
-	
-
 
 	Rlist2 <- data
 	for (jj in 1:hypothesis_rows) {
@@ -177,7 +179,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 	  if (!(is.null(delta))) {
 	    cat('<br><div style="line-height: 175%; margin-left:15px"><b>', estimationmethod, 'Parameter Estimates</b></div>')
-	    title <- c('Parameter Tag', 'Estimate', 'Std. Error', '95% Confidence Interval')
+	    title <- c('Parameter Tag', 'Estimate', 'Std. Error', paste0(1-corrected_alpha,'% Confidence Interval'))
 	    gammaGLS <- round(gammaGLS, 3)
 	    numbers <- c(1:length(gammaGLS))
 	    gammaGLS <- cbind(numbers, gammaGLS, covgamma, gammaGLS_ci)
