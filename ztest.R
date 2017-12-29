@@ -9,6 +9,9 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	makecorr <- dget("makecorr.R")
 	tablegen <- dget("tablegen.r")
 	errorcheck <- dget("errorcheck.r")
+	assess_range <- dget("assess_range.R")
+	assess_mvn <- dget("assess_mvn.R")
+	MultivariateSK <- dget("MultivariateSK.r")
 	
 	
 	if (deletion == 'listwise') { # apply listwise deletion
@@ -28,6 +31,17 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	error <- errorcheck(data, datatype, hypothesis,deletion)
 	if (error == TRUE) {
 	  return(invisible())
+	}
+
+	# Assess multivariate normality using Yuan, Lambert & Fouladi (2004) if using pairwise deletion, Mardia (1970) otherwise
+	if (datatype == 'rawdata') {
+		if (deletion == 'pairwise') {
+			temp <- assess_range(list(data))
+			MardiaSK <- list(temp[[1]], assess_mvn(list(data)))
+			missing <- temp[[2]]
+		} else {
+			  MardiaSK <- MultivariateSK(list(data))
+		}
 	}
 
 	# Produce the correlation matrix using raw data, with pairwise deletion if requested
@@ -190,6 +204,49 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Significance Test Results</b></div>', sep="")
 	  results <- matrix(c('Chi Square', X2, '&nbsp;&nbsp;df', k-q, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', p), nrow=2, ncol=3)
 	  tablegen(results,TRUE)
+
+
+
+
+
+
+    if (datatype == 'rawdata' && deletion != 'pairwise') {
+      
+  	  	cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of Multivariate Normality</b></div>', sep="")  
+        tablegen(MardiaSK[[1]],TRUE)
+        cat('<br>')
+    
+        tablegen(MardiaSK[[2]],TRUE)
+        cat('<br>')
+        
+    }
+    
+    if (deletion == 'pairwise') {
+
+
+
+        
+        if (nrow(MardiaSK[[1]]) == 1) {
+  	  	cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of the Distribution of the Observed Marginals*</b></div>', sep="")  
+          tablegen(MardiaSK[[1]], TRUE)
+          missing <- paste(missing, collapse=", ")
+          cat('&nbsp;&nbsp;&nbsp;&nbsp;* - Skipped because scores were missing in every column<br><br>')
+        } else {
+  	  	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of the Distribution of the Observed Marginals</b></div>', sep="")  
+          tablegen(MardiaSK[[1]], TRUE)
+          cat('<br>')
+        }
+        
+  	  	cat('<div style="line-height: 175%; margin-left:15px"><b>Assessment of the Multivariate Normality</b></div>', sep="")  
+        tablegen(MardiaSK[[2]], TRUE)
+        cat('<br>')
+        
+
+    
+    }
+
+
+
 	}
 	
 	x <- capture.output(printfunction())
