@@ -24,7 +24,7 @@ s2star <- function(rho,n,k,S){
   }
   v3Calc <- function(rho, n){
     x1 <- (3*rho)/(2*(n-1))
-    x2 <- (39* rho + 6*rho^3)/(8(n-1)^2)
+    x2 <- (39* rho + 6*rho^3)/(8*(n-1)^2)
     x3 <- (362*rho +45*rho^3 +63*rho^5)/(32*(n-1)^3)
     x4 <- (2809*rho +296*rho^3 - 327*rho^5 +1170*rho^7)/(128*(n-1)^4)
     x5 <- (47461*rho +5720*rho^3 + 11190*rho^5-73350*rho^7 + 77175*rho^9)/(1280*(n-1)^5)
@@ -32,7 +32,7 @@ s2star <- function(rho,n,k,S){
     v3 <- 1/(n-1) * (x1+x2+x3+x4+x5)
     return(v3)
   }
-  v4Calc <- function(rho,n){
+  v4Calc <- function(rho, n){
     x1 <- 3/(n-1)
     x2 <- (28 - 3 *rho^3)/(2*(n-1)^2)
     x3 <- (736 - 84* rho^2 - 51* rho^4)/(16*(n-1)^3)
@@ -44,9 +44,9 @@ s2star <- function(rho,n,k,S){
   }
   
   v1 <- v1Calc(rho,n)
-  v2- v2alc(rho,n)
-  v3<- v3Calc(rho,n)
-  v4<- v4Calc(rho,n)
+  v2 <- v2Calc(rho,n)
+  v3 <- v3Calc(rho,n)
+  v4 <- v4Calc(rho,n)
   
   aStar <- (1/(n-3)) * sqrt((2/(v4-(v2)^2)))
   bStar <- (k*(k-1)/2)*(1-(aStar*(n-3)*v2))
