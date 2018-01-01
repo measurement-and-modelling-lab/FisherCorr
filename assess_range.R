@@ -1,7 +1,5 @@
 function (data) {
   
-    missing <- c()
-
     zr_table <- c('Group','Variable','Missing values','&nbsp;&nbsp;&nbsp;&nbsp;Z<sub>R</sub>&nbsp;&nbsp;&nbsp;&nbsp;', 'plevel (two-tail)')
 
     zr_table <- matrix(zr_table, nrow=1, ncol=5)
@@ -62,5 +60,5 @@ function (data) {
         }
     }
 
-    return(list(zr_table, missing))
+    return(zr_table)
 }

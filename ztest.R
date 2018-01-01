@@ -12,15 +12,27 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	assess_range <- dget("assess_range.R")
 	assess_mvn <- dget("assess_mvn.R")
 	MultivariateSK <- dget("MultivariateSK.r")
-	
-	
+	MakeSymmetricMatrix <- dget("MakeSymmetricMatrix.r")
+
+	# Make the matrix symmetric if it's square, give error otherwise
+	if (datatype == 'correlation') {
+		if (nrow(data) == ncol(data)) {
+		    data <- MakeSymmetricMatrix(data)
+		} else {
+		    cat('<br>Error: Data matrix is not square.')
+		    return(invisible(TRUE))
+		}
+	}
+
+	# Apply listwise deletion
 	if (deletion == 'listwise') { # apply listwise deletion
 	    temp1 <- suppressWarnings(as.numeric(data))
 	    temp1 <- matrix(temp1, nrow=nrow(data), ncol=ncol(data))
 	    data <- temp1[complete.cases(temp1),]
 	    N <- nrow(data)
 	}
-	
+
+	# Correct N if deletion is pairwise
 	if (deletion == 'pairwise') {
 	  ns <- colSums(!is.na(data))
 	  hmean <- 1/mean(1/ns)
@@ -28,17 +40,37 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	  N <- hmean
 	}
 
+	# Error checking
 	error <- errorcheck(data, datatype, hypothesis,deletion)
 	if (error == TRUE) {
 	  return(invisible())
 	}
 
+	# Remove holes in parameter tag list
+	hypothesis <- hypothesis [order(hypothesis[,4]), , drop=FALSE]
+	parametertags <- unique(hypothesis[,4])
+	if (parametertags != c(0)) {
+
+	  parametertags <- parametertags[parametertags != 0]
+	  num <- length(parametertags)
+	  
+	  for (p in 1:num) {
+	    if (parametertags[[p]] != p) {
+	      hypothesis[,4] <- unlist(lapply(hypothesis[,4], function(x) {
+		if (x == parametertags[[p]]) {
+		  x <- p
+		} else {
+		  x <- x
+		}
+	      }))
+	    }
+	  }
+	}
+
 	# Assess multivariate normality using Yuan, Lambert & Fouladi (2004) if using pairwise deletion, Mardia (1970) otherwise
 	if (datatype == 'rawdata') {
 		if (deletion == 'pairwise') {
-			temp <- assess_range(list(data))
-			MardiaSK <- list(temp[[1]], assess_mvn(list(data)))
-			missing <- temp[[2]]
+			MardiaSK <- list(assess_range(list(data)), assess_mvn(list(data)))
 		} else {
 			  MardiaSK <- MultivariateSK(list(data))
 		}
@@ -50,8 +82,18 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 		data <- output[[1]]
 		moments <- output[[2]]
 	}
-	
-	
+
+	# Check that the correlation matrices are positive definite
+	eigen_values <- eigen(data)[[1]]
+	if (TRUE %in% (eigen_values <= 0)) {
+		if (deletion == 'pairwise') {
+    			cat('<br>Error: Data matrix is not positive definite. Try using listwise deletion instead of pairwise.', sep="")
+			return(invisible(TRUE))
+		} else {
+			cat('<br>Error: Data matrix is not positive definite.', sep="")
+			return(invisible(TRUE))
+		}
+	}
 
 	delta <- makedelta(hypothesis)
 
@@ -178,72 +220,65 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 
 	printfunction <- function () {
-	  
-	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Hypothesis Matrix</b></div>', sep="")
-	  hypothesis <- rbind(c("Group", "Row", "Column", "Parameter Tag", "Fixed Value"), hypothesis)
-	  tablegen(hypothesis,TRUE)
 
-	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Input Correlation Matrix (N=', N, ')</b></div>', sep="")
-	  data <- round(data, 3)
-	  tablegen(data,FALSE)
-	  
-	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>OLS Estimates</b></div>', sep="")
-	  Rlist <- round(Rlist, 3)
-	  tablegen(Rlist,FALSE)
+		# Print hypothesis matrix
+		cat('<br><div style="line-height: 175%; margin-left:15px"><b>Hypothesis Matrix</b></div>', sep="")
+		hypothesis <- rbind(c("Group", "Row", "Column", "Parameter Tag", "Fixed Value"), hypothesis)
+		tablegen(hypothesis,TRUE)
 
-	  if (!(is.null(delta))) {
-	    cat('<br><div style="line-height: 175%; margin-left:15px"><b>', estimationmethod, 'Parameter Estimates</b></div>')
-	    title <- c('Parameter Tag', 'Estimate', 'Std. Error', paste0(1-corrected_alpha,'% Confidence Interval'))
-	    gammaGLS <- round(gammaGLS, 3)
-	    numbers <- c(1:length(gammaGLS))
-	    gammaGLS <- cbind(numbers, gammaGLS, covgamma, gammaGLS_ci)
-	    gammaGLS <- rbind(title, gammaGLS)
-	    tablegen(gammaGLS,TRUE)
-	  }
-	  
-	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Significance Test Results</b></div>', sep="")
-	  results <- matrix(c('Chi Square', X2, '&nbsp;&nbsp;df', k-q, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', p), nrow=2, ncol=3)
-	  tablegen(results,TRUE)
+		# Print correlation matrix
+		cat('<br><div style="line-height: 175%; margin-left:15px"><b>Input Correlation Matrix (N=', N, ')</b></div>', sep="")
+		data <- round(data, 3)
+		tablegen(data,FALSE)
 
+		# Print OLS estimates
+		cat('<br><div style="line-height: 175%; margin-left:15px"><b>OLS Estimates</b></div>', sep="")
+		Rlist <- round(Rlist, 3)
+		tablegen(Rlist,FALSE)
 
+		# Print parameter estimates
+		if (!(is.null(delta))) {
+			cat('<br><div style="line-height: 175%; margin-left:15px"><b>', estimationmethod, 'Parameter Estimates</b></div>')
+			title <- c('Parameter Tag', 'Estimate', 'Std. Error', paste0(1-corrected_alpha,'% Confidence Interval'))
+			gammaGLS <- round(gammaGLS, 3)
+			numbers <- c(1:length(gammaGLS))
+			gammaGLS <- cbind(numbers, gammaGLS, covgamma, gammaGLS_ci)
+			gammaGLS <- rbind(title, gammaGLS)
+			tablegen(gammaGLS,TRUE)
+		}
 
+		# Print Significance test results
+		cat('<br><div style="line-height: 175%; margin-left:15px"><b>Significance Test Results</b></div>', sep="")
+		results <- matrix(c('Chi Square', X2, '&nbsp;&nbsp;df', k-q, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', p), nrow=2, ncol=3)
+		tablegen(results,TRUE)
 
-
-
-    if (datatype == 'rawdata' && deletion != 'pairwise') {
-      
-  	  	cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of Multivariate Normality</b></div>', sep="")  
-        tablegen(MardiaSK[[1]],TRUE)
-        cat('<br>')
-    
-        tablegen(MardiaSK[[2]],TRUE)
-        cat('<br>')
-        
-    }
-    
-    if (deletion == 'pairwise') {
-
-
-
-        
-        if (nrow(MardiaSK[[1]]) == 1) {
-  	  	cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of the Distribution of the Observed Marginals*</b></div>', sep="")  
-          tablegen(MardiaSK[[1]], TRUE)
-          missing <- paste(missing, collapse=", ")
-          cat('&nbsp;&nbsp;&nbsp;&nbsp;* - Skipped because scores were missing in every column<br><br>')
-        } else {
-  	  	  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of the Distribution of the Observed Marginals</b></div>', sep="")  
-          tablegen(MardiaSK[[1]], TRUE)
-          cat('<br>')
-        }
-        
-  	  	cat('<div style="line-height: 175%; margin-left:15px"><b>Assessment of the Multivariate Normality</b></div>', sep="")  
-        tablegen(MardiaSK[[2]], TRUE)
-        cat('<br>')
-        
-
-    
-    }
+		# Print Multivariate normality check
+		if (datatype == 'rawdata' && deletion != 'pairwise') {
+		  
+			cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of Multivariate Normality</b></div>', sep="")  
+			tablegen(MardiaSK[[1]],TRUE)
+			cat('<br>')
+		
+			tablegen(MardiaSK[[2]],TRUE)
+			cat('<br>')
+			
+		}
+		if (deletion == 'pairwise') {
+			
+			if (nrow(MardiaSK[[1]]) == 1) {
+			  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of the Distribution of the Observed Marginals*</b></div>', sep="")  
+			  tablegen(MardiaSK[[1]], TRUE)
+			  cat('&nbsp;&nbsp;&nbsp;&nbsp;* - Skipped, either because every column had missing data or because there was no missing data<br><br>')
+			} else {
+			  cat('<br><div style="line-height: 175%; margin-left:15px"><b>Assessment of the Distribution of the Observed Marginals</b></div>', sep="")  
+			  tablegen(MardiaSK[[1]], TRUE)
+			  cat('<br>')
+			}
+			
+			cat('<div style="line-height: 175%; margin-left:15px"><b>Assessment of the Multivariate Normality</b></div>', sep="")  
+			tablegen(MardiaSK[[2]], TRUE)
+			cat('<br>')
+		}
 
 
 
