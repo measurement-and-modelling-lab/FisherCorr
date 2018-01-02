@@ -217,6 +217,9 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 	p <- pchisq(X2, df=(k-q), lower.tail = FALSE)
 	p <- round(p, 3)
+	if (p == 0) {
+		p <- '< .001'
+	}
 
 
 	printfunction <- function () {
