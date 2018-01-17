@@ -222,6 +222,22 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	}
 
 
+	if (nrow(hypothesis) == nrow(data) && is.null(delta) && hypothesis[,5] == rep(0, nrow(data))) {
+		identity <- TRUE
+		scalc <- dget("scalc.R")
+		s2star <- dget("s2star.R")
+		S <- scalc(data, N)
+		S <- s2star(0, N, nrow(data), S)
+		Sp <- pchisq(S, df=k, lower.tail=FALSE)
+		S <- round(S, 3)
+		Sp <- round(Sp, 3)
+	}
+
+
+
+
+
+
 	printfunction <- function () {
 
 		# Print hypothesis matrix
@@ -254,6 +270,14 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 		cat('<br><div style="line-height: 175%; margin-left:15px"><b>Significance Test Results</b></div>', sep="")
 		results <- matrix(c('Chi Square', X2, '&nbsp;&nbsp;df', k-q, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', p), nrow=2, ncol=3)
 		tablegen(results,TRUE)
+
+		if (identity == TRUE) {
+
+		cat('<br>')
+		results <- matrix(c('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S', S, '&nbsp;&nbsp;df', k, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', Sp), nrow=2, ncol=3)
+		tablegen(results,TRUE)
+
+		}
 
 		# Print Multivariate normality check
 		if (datatype == 'rawdata' && deletion != 'pairwise') {

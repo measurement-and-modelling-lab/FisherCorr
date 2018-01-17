@@ -83,6 +83,17 @@ for (jj in 1:hypothesis_rows) {
 
 sigmaLS <- Psi
 
+# Multiply rhoLS by the corrlations from the hypothesis file minus rhostar
+#(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
+
+print(delta)
+
+print(sigmaLS)
+
+print(t(delta)%*%solve(sigmaLS))
+
+print(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
+
 if (is.null(delta)) {
 	e <- correlations - rhostar
 } else {
@@ -90,6 +101,7 @@ if (is.null(delta)) {
 	rhoGLS <- delta%*%gammaGLS + rhostar
 	e <- z(correlations) - z(rhoGLS)
 }
+
 
 Rlist2 <- data
 for (jj in 1:hypothesis_rows) {
@@ -119,7 +131,21 @@ if (is.null(delta)) {
 	q <- ncol(delta)
 }
 
+if (nrow(hypothesis) == nrow(data) && is.null(delta) && hypothesis[,5] == rep(0, nrow(data))) {
+    identity <- TRUE
+    scalc <- dget("scalc.R")
+    s2star <- dget("s2star.R")
+    S <- scalc(data, N)
+    S <- s2star(0, N, nrow(data), S)
+    Sp <- pchisq(S, df=k, lower.tail=FALSE)
+    S <- round(S, 3)
+    Sp <- round(Sp, 3)
+}
+
 p <- pchisq(X2, df=(k-q), lower.tail = FALSE)
 
 cat('X2 =',X2,'\n')
 cat('p-value =',p,'\n')
+
+cat('S =', S,'\n')
+cat('p-value =',Sp,'\n')
