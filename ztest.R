@@ -173,6 +173,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 		# confidence interval on parameter tag estimates
 		number_of_parameters <- length(gammaGLS)
 		corrected_alpha <- 0.05/number_of_parameters
+		corrected_alpha <- round(corrected_alpha, 3)
 		critical_value <- qnorm(1-corrected_alpha/2)
 		gammaGLS_ci <- lapply(gammaGLS, function(x) {
 		  UL <- z(x) + critical_value*sqrt(1/(N-3))
