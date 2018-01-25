@@ -222,16 +222,27 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 		p <- '< .001'
 	}
 
-
-	if (nrow(hypothesis) == nrow(data) && is.null(delta) && hypothesis[,5] == rep(0, nrow(data))) {
-		identity <- TRUE
-		scalc <- dget("scalc.R")
-		s2star <- dget("s2star.R")
-		S <- scalc(data, N)
-		S <- s2star(0, N, nrow(data), S)
-		Sp <- pchisq(S, df=k, lower.tail=FALSE)
-		S <- round(S, 3)
-		Sp <- round(Sp, 3)
+    num_correlations <- (nrow(data)*(nrow(data)-1))/2
+	if (nrow(hypothesis) == num_correlations && is.null(delta) && hypothesis[,5] == rep(0, nrow(data))) {
+	    
+	    identity <- diag(nrow(data))
+	    test <- identity
+	    for (i in 1:nrow(hypothesis)) {
+	        row <- hypothesis[i,2]
+	        col <- hypothesis[i,3]
+	        test[row,col] <- hypothesis[i,5]
+	    }
+	    
+	    if (identical(identity, test)) {
+    		identity <- TRUE
+    		scalc <- dget("scalc.R")
+    		s2star <- dget("s2star.R")
+    		S <- scalc(data, N)
+    		S <- s2star(0, N, nrow(data), S)
+    		Sp <- pchisq(S, df=k, lower.tail=FALSE)
+    		S <- round(S, 3)
+    		Sp <- round(Sp, 3)
+	    }
 	}
 
 
