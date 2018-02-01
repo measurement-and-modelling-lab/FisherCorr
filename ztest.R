@@ -223,6 +223,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 	}
 
     num_correlations <- (nrow(data)*(nrow(data)-1))/2
+    identity <- FALSE
 	if (nrow(hypothesis) == num_correlations && is.null(delta) && hypothesis[,5] == rep(0, nrow(data))) {
 	    
 	    identity <- diag(nrow(data))
@@ -285,9 +286,9 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 		if (identity == TRUE) {
 
-		cat('<br>')
-		results <- matrix(c('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S', S, '&nbsp;&nbsp;df', k, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', Sp), nrow=2, ncol=3)
-		tablegen(results,TRUE)
+    		cat('<br>')
+    		results <- matrix(c('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S', S, '&nbsp;&nbsp;df', k, '&nbsp;&nbsp;&nbsp;&nbsp;Sig.', Sp), nrow=2, ncol=3)
+    		tablegen(results,TRUE)
 
 		}
 
