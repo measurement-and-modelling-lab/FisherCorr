@@ -1,8 +1,37 @@
-library(shinythemes)
+require(htmlTable) || install.packages(htmlTable)
+require(shiny) || install.packages(shiny)
+require(shinythemes) || install.packages(shinythemes)
 
 shinyUI(fluidPage(theme = "simplex.css",
+                  
+    HTML('<br>
+  
+    <link rel="stylesheet" type="text/css" href="index.css">
+  <style>
+    html {
+       overflow-y: scroll;
+       }
+       </style>
+    <title>Analytics^2 - About</title>
+         <div class="bar">
+    <b class="title">Measurement and Modelling Lab &nbsp; - &nbsp; Tools</b><br class="rwd-break"><b class="link">
+    <a href="https://shiny.rcg.sfu.ca/u/pserafin/MML-R2/"><font color="white">MML-R2</font></a>
+    &emsp;&nbsp;<a href="https://shiny.rcg.sfu.ca/u/pserafin/MML-WBCORR/"><font color="#00ca8a">MML-WBCORR</font></a>
+    &emsp;&nbsp;<a href="https://shiny.rcg.sfu.ca/u/pserafin/csvgenerator/"><font color="white">CSV Generator</font></a>
+
+
+
+
+
+        </b>
+        </div>
+         
+         
+         
+         '),
 
     HTML("<br>"),
+    
     
     tags$head(
       tags$style(HTML("
@@ -12,7 +41,8 @@ shinyUI(fluidPage(theme = "simplex.css",
                       font-weight: bold;
                       line-height: 1.1;
                       color: #333;
-                      }
+                    }
+                    body { min-width: 450px; }
                     sub { vertical-align: 25%; font-size: 70%; }
                     th {
                       white-space: nowrap;
@@ -48,18 +78,17 @@ shinyUI(fluidPage(theme = "simplex.css",
                       "))
     ),
 
-    headerPanel('MML-Multicor', windowTitle = 'MML-Multicor'),
+    headerPanel('', windowTitle = 'MML-WBCORR'),
 
     sidebarLayout(
     sidebarPanel(
         radioButtons("datatype", "Data type:", c("Correlation data" = "correlation", "Raw data" = "rawdata")),
         uiOutput("estimationmethodInput"),
-        conditionalPanel(condition = "input.datatype == 'rawdata' && input.estimationmethod != 'TSADF' && input.estimationmethod != 'ADF'", radioButtons("deletion1", label = "Missing values:", choices = c("There are none" = 'no', "Listwise deletion" = 'listwise', "Pairwise deletion" = 'pairwise'))),
-        conditionalPanel(condition = "input.datatype == 'rawdata' && input.estimationmethod != 'TSGLS' && input.estimationmethod != 'GLS'", radioButtons("deletion2", label = "Missing values:", choices = c("There are none" = 'no', "Listwise deletion" = 'listwise'))),
-		    conditionalPanel(condition = "input.datatype == 'correlation'", textInput("N", "Sample size:")),
+        conditionalPanel(condition = "input.datatype == 'rawdata' && input.estimationmethod != 'TSADF' && input.estimationmethod != 'ADF'", radioButtons("glsdeletion", label = "Missing values:", choices = c("There are none" = "nodeletion", "Listwise deletion" = 'listwise', "Pairwise deletion" = 'pairwise'))),
+        conditionalPanel(condition = "input.datatype == 'rawdata' && input.estimationmethod != 'TSGLS' && input.estimationmethod != 'GLS'", radioButtons("adfdeletion", label = "Missing values:", choices = c("There are none" = "nodeletion", "Listwise deletion" = 'listwise'))),
         fileInput("hypothesisfile", "Hypothesis file:"),
         fileInput("datafile", "Data file:"),
-        HTML('<hr style="height:1px; visibility:hidden;" />'),
+        conditionalPanel(condition = "input.datatype == 'correlation'", numericInput("samplesize", "Sample size:", min=1, value=1)),
         HTML("<hr>"),
         actionButton("runButton", "Run")
     ),
@@ -67,8 +96,10 @@ shinyUI(fluidPage(theme = "simplex.css",
     mainPanel(
       tabsetPanel(
         id = "inTabset",
-        tabPanel(value = "exa", "Readme", includeHTML("readme.html")),
-        tabPanel(value = "out", "Output", htmlOutput("wbsctOutput"))
+        tabPanel(value = "readme1", "Formatting input", includeHTML("./documentation/input.html")),
+        tabPanel(value = "readme2", "Choosing a method", includeHTML("./documentation/method.html")),
+        tabPanel(value = "readme3", "Interpreting output", includeHTML("./documentation/output.html")),
+        tabPanel(value = "out", "Output", uiOutput("finaloutput"))
       )
       )),
     HTML('<br>'),
