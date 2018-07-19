@@ -1,17 +1,15 @@
 function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
+    ## Import functions
     fisherTransform <- dget("./multicorr/fisherz.R")
-    makedelta <- dget("./multicorr/MakeDeltaFromHypothesis.R")
-    adfCov <- dget("./multicorr/adfCov.r")
-    compute4thOrderMoments <- dget("./multicorr/compute4thOrderMoments.r")
-    findpos <- dget("./multicorr/findpos.r")
-    FRHO <- dget("./multicorr/FRHO.r")
-    makecorr <- dget("./multicorr/makecorr.R")
-    errorcheck <- dget("./multicorr/errorcheck.r")
+    adfCov <- dget("./multicorr/adfCov.R")
+    compute4thOrderMoments <- dget("./multicorr/compute4thOrderMoments.R")
+    findpos <- dget("./multicorr/findpos.R")
+    FRHO <- dget("./multicorr/FRHO.R")
+    errorcheck <- dget("./multicorr/errorcheck.R")
     assess_range <- dget("./multicorr/assess_range.R")
     assess_mvn <- dget("./multicorr/assess_mvn.R")
-    MultivariateSK <- dget("./multicorr/MultivariateSK.r")
-    MakeSymmetricMatrix <- dget("./multicorr/MakeSymmetricMatrix.r")
+    MultivariateSK <- dget("./multicorr/MultivariateSK.R")
 
 
     ## If the upper triangle of a correlation matrix is empty, make the matrix symmetric
@@ -223,9 +221,8 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     }
 
 
+    ## Calculate test statistic and p value
     chisquare <- (N - 3)*t(e)%*%solve(SLS)%*%e
-    ##X2 <- round(X2, 3)
-
     k <- ncol(R)
     q <- parameters.length
     p <- pchisq(chisquare, df=(k-q), lower.tail = FALSE)
@@ -237,6 +234,8 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     sigtable <- round(sigtable, 3)
     colnames(sigtable) <- c("Chi Square", "df", "pvalue")
     
+    ## Test whether the hypothesis is the identity hypothesis
+    ## If so, run superior S test
     test.matrix <- R
     for (i in 1:nrow(hypothesis)) {
         if (hypothesis[i,4] == 0) {

@@ -41,7 +41,7 @@ shinyServer(function(input, output, session) {
     wbsctOutput <- eventReactive(input$runButton, {
 
         ## Read functions
-        ztest <- dget("./multicorr/ztest.R")
+        ComputeMulticorrChiSquare <- dget("./multicorr/ComputeMulticorrChiSquare.R")
 
 
         ## Stipulate data type
@@ -108,7 +108,7 @@ shinyServer(function(input, output, session) {
 
 
         ## Run the test
-        output <- ztest(data, N, hypothesis, datatype, estimation.method, deletion)
+        output <- ComputeMulticorrChiSquare(data, N, hypothesis, datatype, estimation.method, deletion)
 
         html.output <- ""
         #NList <- output[[6]] ## Import amended sample sizes
@@ -159,6 +159,14 @@ shinyServer(function(input, output, session) {
         sigtable <- output[[6]]
         header <- "Significance Test Results"
         html.output <- paste0(html.output, htmlTable(sigtable, align="c", caption=header))
+
+
+        ## Return significance test results
+        if (!is.na(S.result)) {
+            S.result <- output[[8]]
+            header <- "Significance Test Results"
+            html.output <- paste0(html.output, htmlTable(S.result, align="c", caption=header))
+        }
 
 
         ## Print MVN test
