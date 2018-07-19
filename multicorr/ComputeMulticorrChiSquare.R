@@ -48,9 +48,12 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
     ## Renumber parameter tags if a number is skipped
     parameter.tags <- hypothesis[hypothesis[,4] != 0, 4]
-    if (max(parameter.tags) > length(unique(parameter.tags))) {
-        hypothesis[hypothesis[,4] != 0, 4] <- as.numeric(as.factor(parameter.tags))
+    if (length(parameter.tags) != 0) {
+        if (max(parameter.tags) > length(unique(parameter.tags))) {
+            hypothesis[hypothesis[,4] != 0, 4] <- as.numeric(as.factor(parameter.tags))
+        }
     }
+
 
 
     ## Assess multivariate normality using Yuan, Lambert & Fouladi (2004) if using pairwise deletion, Mardia (1970) otherwise
@@ -89,7 +92,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     delta <- sapply(1:max(hypothesis[,4]), function(p) {
         as.numeric(p == hypothesis[,4])
     })
-    no.parameters <- max(delta) == 0
+    no.parameters <- max(hypothesis[,4]) == 0
 
 
     ## getVecR
@@ -106,7 +109,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     hypothesis[hypothesis[,4] != 0, 5] <- 0
     rhostar <- hypothesis[,5]
 
-    if (is.null(delta)) {
+    if (no.parameters) {
         rhoLS <- rhostar
     } else {
         gammaLS <- solve(t(delta)%*%delta)%*%t(delta)%*%(correlations - rhostar)
@@ -200,6 +203,8 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             colnames(estimates.table) <- c("Parameter Tags", "Point Estimate", "Std. Error", "Confidence Interval")
     }
 
+    
+
     R.GLS <- R
     for (jj in 1:hypothesis_rows) {
         j <- hypothesis[jj,2]
@@ -260,7 +265,9 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         S.result <- NA
     }
 
+
     output <- list(hypothesis, N, R, R.OLS, estimates.table, sigtable, R.GLS, S.result, MardiaSK)
+
     return(output)
 
 }

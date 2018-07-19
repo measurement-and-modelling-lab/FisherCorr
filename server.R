@@ -110,6 +110,7 @@ shinyServer(function(input, output, session) {
         ## Run the test
         output <- ComputeMulticorrChiSquare(data, N, hypothesis, datatype, estimation.method, deletion)
 
+
         html.output <- ""
         #NList <- output[[6]] ## Import amended sample sizes
 
@@ -148,10 +149,12 @@ shinyServer(function(input, output, session) {
 
         ## Print the parameter estimates
         gammahatDisplay <- output[[5]]
-        gammahatDisplay <- gammahatDisplay[order(gammahatDisplay[,1]), , drop=FALSE] ## Order the estimates by parameter tag
-        if (!identical(NA, gammahatDisplay)) {
-            header <- paste0(estimation.method, " Parameter Estimates")
-            html.output <- paste0(html.output, htmlTable(gammahatDisplay, align="c", caption=header))
+        if (is.matrix(gammahatDisplay)) {
+            gammahatDisplay <- gammahatDisplay[order(gammahatDisplay[,1]), , drop=FALSE] ## Order the estimates by parameter tag
+            if (!identical(NA, gammahatDisplay)) {
+                header <- paste0(estimation.method, " Parameter Estimates")
+                html.output <- paste0(html.output, htmlTable(gammahatDisplay, align="c", caption=header))
+            }
         }
 
 
@@ -162,8 +165,8 @@ shinyServer(function(input, output, session) {
 
 
         ## Return significance test results
+        S.result <- output[[8]]
         if (!is.na(S.result)) {
-            S.result <- output[[8]]
             header <- "Significance Test Results"
             html.output <- paste0(html.output, htmlTable(S.result, align="c", caption=header))
         }
