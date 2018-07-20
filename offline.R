@@ -134,9 +134,17 @@ cat("\nSignificance Test Results\n\n")
 tablegen(sigtable, TRUE)
 
 
+## Print the significance of S test
+S.result <- output[[6]]
+if (is.matrix(S.result)) {
+    cat("\nSignificance Test Results\n\n")
+    tablegen(S.result, TRUE)
+}
+
+
 ## Print MVN test
 if (datatype == "rawdata") {
-    MardiaSK <- output[[9]]
+    MardiaSK <- output[[8]]
     if (deletion == "pairwise") {
         cat("\nAssessment of the Distribution of the Observed Marginals\n\n\n")
         tablegen(MardiaSK[[1]], TRUE)

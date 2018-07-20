@@ -1,4 +1,4 @@
-function (data, jj) {
+function (data) {
     n <- nrow(data)
     p <- ncol(data)
     means <- matrix(0,p,1)

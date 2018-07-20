@@ -11,6 +11,8 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     assess_range <- dget("./multicorr/assess_range.R")
     assess_mvn <- dget("./multicorr/assess_mvn.R")
     MultivariateSK <- dget("./multicorr/MultivariateSK.R")
+    adfCov <- dget("./multicorr/adfCov.R")
+    nCov <- dget("./multicorr/nCov.R")
 
 
     ## If the upper triangle of a correlation matrix is empty, make the matrix symmetric
@@ -120,19 +122,17 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     }
 
 
-    ## Input the LS estimates into R to create the OLS matrix
+    ## Create OLS estimates
     R.OLS <- R
-    if (estimationmethod %in% c('TSGLS', 'TSADF')) {
-        for (jj in 1:hypothesis.length) {
-            j <- hypothesis[jj,2]
-            k <- hypothesis[jj,3]
-            R.OLS[j,k] <- rhoLS[jj]
-            R.OLS[k,j] <- rhoLS[jj]
-        }
+    for (jj in 1:hypothesis.length) {
+        j <- hypothesis[jj,2]
+        k <- hypothesis[jj,3]
+        R.OLS[j,k] <- rhoLS[jj]
+        R.OLS[k,j] <- rhoLS[jj]
     }
 
 
-    ## Calculate correlation covariance
+    ## Calculate correlation covariance for each pair of correlations from the hypothesis matrix
     Psi <- matrix(0, nrow=hypothesis.length, ncol=hypothesis.length)
     for (jj in 1:hypothesis.length) {
         for (kk in 1:jj) {
@@ -142,18 +142,10 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             m <- hypothesis[kk,3]
 
             if (estimationmethod %in% c('GLS', 'TSGLS')) {
-                term1 <- ((R.OLS[j,h] - R.OLS[j,k]*R.OLS[k,h])*(R.OLS[k,m] - R.OLS[k,h]*R.OLS[h,m]))
-                term2 <- ((R.OLS[j,m] - R.OLS[j,h]*R.OLS[h,m])*(R.OLS[k,h] - R.OLS[k,j]*R.OLS[j,h]))
-                term3 <- ((R.OLS[j,h] - R.OLS[j,m]*R.OLS[m,h])*(R.OLS[k,m] - R.OLS[k,j]*R.OLS[j,m]))
-                term4 <- ((R.OLS[j,m] - R.OLS[j,k]*R.OLS[k,m])*(R.OLS[k,h] - R.OLS[k,m]*R.OLS[m,h]))
-                Psi[jj,kk] <- (0.5)*(term1 + term2 + term3 + term4)
+                Psi[jj,kk] <- nCov(j, k, h, m, R)
                 Psi[kk,jj] <- Psi[jj,kk]
             } else {
-                term1 <- FRHO(j,k,h,m,moments)
-                term2 <- (1/4)*R.OLS[j,k]*R.OLS[h,m]*(FRHO(j,j,h,h,moments) + FRHO(k,k,h,h,moments) + FRHO(j,j,m,m,moments) + FRHO(k,k,m,m,moments))
-                term3 <- (1/2)*R.OLS[j,k]*(FRHO(j,j,h,m,moments) + FRHO(k,k,h,m,moments))
-                term4 <- (1/2)*R.OLS[h,m]*(FRHO(j,k,h,h,moments) + FRHO(j,k,m,m,moments))
-                Psi[jj,kk] <- (term1 + term2 - term3 - term4)
+                Psi[jj,kk] <- adfCov(j, k, h, m, R, moments)
                 Psi[kk,jj] <- Psi[jj,kk]
             }
         }
@@ -260,7 +252,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         S.result <- NA
     }
 
-    output <- list(hypothesis, N, R, R.GLS, estimates.table, sigtable, R.OLS, S.result, MardiaSK)
+    output <- list(hypothesis, N, R, R.OLS, estimates.table, sigtable, S.result, MardiaSK)
 
     return(output)
 }

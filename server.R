@@ -169,7 +169,7 @@ shinyServer(function(input, output, session) {
 
 
         ## Return significance test results
-        S.result <- output[[8]]
+        S.result <- output[[7]]
         if (is.matrix(S.result)) {
             header <- "Significance Test Results"
             html.output <- paste0(html.output, htmlTable(S.result, align="c", caption=header))
@@ -178,7 +178,7 @@ shinyServer(function(input, output, session) {
 
         ## Print MVN test
         if (datatype == "rawdata") {
-            MardiaSK <- output[[9]]
+            MardiaSK <- output[[8]]
             if (deletion == "pairwise") {
                 html.output <- paste0(html.output, htmlTable(MardiaSK[[1]], align="c", caption="Assessment of the Distribution of the Observed Marginals"))
                 html.output <- paste0(html.output, htmlTable(MardiaSK[[2]], align="c", caption="Assessment of Multivariate Normality"))
