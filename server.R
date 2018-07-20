@@ -63,9 +63,9 @@ shinyServer(function(input, output, session) {
         tryCatch({
             read.csv(file=input$datafile[[4]], head=FALSE)
         }, warning = function(w) {
-            stop("There was a problem reading one of your .csv files.")
+            stop("There was a problem reading one of your .csv files. You may need to add a blank line to the end of the file.")
         }, error = function(e) {
-            stop("There was a problem reading one of your .csv files.")
+            stop("There was a problem reading one of your .csv files. You may need to add a blank line to the end of the file.")
         })
 
         data <- as.matrix(read.csv(file=input$datafile[[4]], head=FALSE))
@@ -80,9 +80,9 @@ shinyServer(function(input, output, session) {
         tryCatch({
             read.csv(file=input$hypothesisfile[[4]], head=FALSE)
         }, warning = function(w) {
-            stop("There was a problem reading your hypothesis file.")
+            stop("There was a problem reading your hypothesis file. You may need to add a blank line to the end of the file.")
         }, error = function(e) {
-            stop("There was a problem reading your hypothesis file.")
+            stop("There was a problem reading your hypothesis file. You may need to add a blank line to the end of the file.")
         })
 
 
