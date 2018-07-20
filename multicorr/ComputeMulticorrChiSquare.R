@@ -1,5 +1,6 @@
 function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
+
     ## Import functions
     fisherTransform <- dget("./multicorr/fisherz.R")
     adfCov <- dget("./multicorr/adfCov.R")
@@ -26,7 +27,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 
     ## Error checking
-    errorcheck(data, datatype, hypothesis,deletion)
+    errorcheck(data, datatype, hypothesis, deletion)
 
 
     ## Renumber parameter tags if a number is skipped
@@ -36,7 +37,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             hypothesis[hypothesis[,4] != 0, 4] <- as.numeric(as.factor(parameter.tags))
         }
     }
-    
+
 
     ## Apply listwise deletion
     if (deletion == 'listwise') { ## apply listwise deletion
@@ -106,7 +107,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         correlations[jj] <- R[j,k]
     }
 
-    
+
     ## Create a column matrix of fixed values
     hypothesis[hypothesis[,4] != 0, 5] <- 0
     rhostar <- hypothesis[,5,drop=FALSE]
@@ -123,7 +124,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
     ## Input the LS estimates into R to create the OLS matrix
     R.OLS <- R
-    if (estimationmethod %in% c('TSGLS', 'TSADF')) { ## I think this conditional gives us GLS and TSGLS
+    if (estimationmethod %in% c('TSGLS', 'TSADF')) {
         for (jj in 1:hypothesis.length) {
             j <- hypothesis[jj,2]
             k <- hypothesis[jj,3]
@@ -148,18 +149,18 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
                 term3 <- ((R.OLS[j,h] - R.OLS[j,m]*R.OLS[m,h])*(R.OLS[k,m] - R.OLS[k,j]*R.OLS[j,m]))
                 term4 <- ((R.OLS[j,m] - R.OLS[j,k]*R.OLS[k,m])*(R.OLS[k,h] - R.OLS[k,m]*R.OLS[m,h]))
                 Psi[jj,kk] <- (0.5)*(term1 + term2 + term3 + term4)
-                Psi[kk,jj] <- (0.5)*(term1 + term2 + term3 + term4)
+                Psi[kk,jj] <- Psi[jj,kk]
             } else {
                 term1 <- FRHO(j,k,h,m,moments)
                 term2 <- (1/4)*R.OLS[j,k]*R.OLS[h,m]*(FRHO(j,j,h,h,moments) + FRHO(k,k,h,h,moments) + FRHO(j,j,m,m,moments) + FRHO(k,k,m,m,moments))
                 term3 <- (1/2)*R.OLS[j,k]*(FRHO(j,j,h,m,moments) + FRHO(k,k,h,m,moments))
                 term4 <- (1/2)*R.OLS[h,m]*(FRHO(j,k,h,h,moments) + FRHO(j,k,m,m,moments))
                 Psi[jj,kk] <- (term1 + term2 - term3 - term4)
-                Psi[kk,jj] <- (term1 + term2 - term3 - term4)
+                Psi[kk,jj] <- Psi[jj,kk]
             }
         }
     }
-    
+
     sigmaLS <- Psi
 
     parameters <- unique(hypothesis[, 4])
@@ -174,7 +175,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         gammaGLS <- solve(t(delta)%*%solve(sigmaLS)%*%delta)%*%(t(delta)%*%solve(sigmaLS)%*%(correlations - rhostar))
         rhoGLS <- delta%*%gammaGLS + rhostar
         e <- fisherTransform(correlations) - fisherTransform(rhoGLS)
-        
+
         ## variance of parameter tag estimates---differs from WBCORR but that might be correct
         nMatrix <- diag(rep(N, hypothesis.length))
         OmegaHatInverse <- sqrt(nMatrix)%*%solve(Psi)%*%sqrt(nMatrix)
@@ -206,7 +207,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             colnames(estimates.table) <- c("Parameter Tags", "Point Estimate", "Std. Error", "Confidence Interval")
     }
 
-    
+
     R.GLS <- R
     for (jj in 1:hypothesis.length) {
         j <- hypothesis[jj,2]
@@ -223,7 +224,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             h <- hypothesis[kk,2]
             m <- hypothesis[kk,3]
             SLS[jj,kk] <- sigmaLS[jj,kk]/(1 - R.GLS[j,k]^2)*(1 - R.GLS[h,m]^2)
-            SLS[kk,jj] <- sigmaLS[jj,kk]/(1 - R.GLS[j,k]^2)*(1 - R.GLS[h,m]^2) ## Adding this makes the output differ from Multicorr; probably a bug in the original
+            SLS[kk,jj] <- SLS[jj,kk] ## Adding this makes the output differ from Multicorr; probably a bug in the original
         }
     }
 
@@ -241,20 +242,11 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     }
     colnames(sigtable) <- c("Chi Square", "df", "pvalue")
 
-    
+
     ## Test whether the hypothesis is the identity hypothesis
     ## If so, run superior S test
-    test.matrix <- R
-    for (i in 1:nrow(hypothesis)) {
-        if (hypothesis[i,4] == 0) {
-            row <- hypothesis[i,2]
-            col <- hypothesis[i,3]
-            test.matrix[row,col] <- hypothesis[i,5]
-            test.matrix[col,row] <- hypothesis[i,5]
-        }
-    }
     identity.matrix <- diag(k)
-    if (all(test.matrix == identity.matrix)) {
+    if (all(R.GLS == identity.matrix)) {
         scalc <- dget("./multicorr/scalc.R")
         s2star <- dget("./multicorr/s2star.R")
         S <- scalc(R, N)
@@ -270,8 +262,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         S.result <- NA
     }
 
-    output <- list(hypothesis, N, R, R.OLS, estimates.table, sigtable, R.GLS, S.result, MardiaSK)
+    output <- list(hypothesis, N, R, R.GLS, estimates.table, sigtable, R.OLS, S.result, MardiaSK)
 
     return(output)
-
 }
