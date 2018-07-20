@@ -80,9 +80,6 @@ shinyUI(fluidPage(theme = "simplex.css",
                       "))
     ),
 
-  
-    options(shiny.sanitize.errors = FALSE),
-
     headerPanel('', windowTitle = 'MML-Multicorr'),
 
     sidebarLayout(
