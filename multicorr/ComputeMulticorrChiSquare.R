@@ -16,7 +16,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     ## Otherwise, check whether the matrix is symmetric and if not return an error
     if (datatype == "correlation") {
         current.upper.triangle <- data[upper.tri(data)]
-        symmetric.upper.triangle <- t(data)[upper.tri((data))]
+        symmetric.upper.triangle <- t(data)[upper.tri(t(data))]
         if (all(is.na(current.upper.triangle))) {
             data[upper.tri(data)] <- symmetric.upper.triangle
         } else if (!all(current.upper.triangle == symmetric.upper.triangle)) {
@@ -24,6 +24,19 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         }
     }
 
+
+    ## Error checking
+    errorcheck(data, datatype, hypothesis,deletion)
+
+
+    ## Renumber parameter tags if a number is skipped
+    parameter.tags <- hypothesis[hypothesis[,4] != 0, 4]
+    if (length(parameter.tags) > 0) {
+        if (max(parameter.tags) > length(unique(parameter.tags))) {
+            hypothesis[hypothesis[,4] != 0, 4] <- as.numeric(as.factor(parameter.tags))
+        }
+    }
+    
 
     ## Apply listwise deletion
     if (deletion == 'listwise') { ## apply listwise deletion
@@ -40,20 +53,6 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         hmean <- 1/mean(1/ns)
         hmean <- round(hmean, 1)
         N <- hmean
-    }
-
-
-    ## Error checking
-    #errorcheck(data, datatype, hypothesis,deletion)
-
-
-
-    ## Renumber parameter tags if a number is skipped
-    parameter.tags <- hypothesis[hypothesis[,4] != 0, 4]
-    if (length(parameter.tags) > 0) {
-        if (max(parameter.tags) > length(unique(parameter.tags))) {
-            hypothesis[hypothesis[,4] != 0, 4] <- as.numeric(as.factor(parameter.tags))
-        }
     }
 
 

@@ -1,72 +1,71 @@
 function (data, datatype, hypothesis, deletion) {
 
-	if (ncol(hypothesis) != 5) {
-		cat('<br>Error: The hypothesis matrix has the wrong number of columns.')
-		return(invisible(TRUE))
-	}
+    if (ncol(hypothesis) != 5) {
+        stop('The hypothesis matrix has the wrong number of columns.')
+    }
 
-    fixed <- hypothesis[,5]
-    first4columns <- hypothesis[,-5]
-
-    if (is.numeric(hypothesis) == FALSE) {
-        cat('<br>Error: The hypothesis matrix has a non-numeric entry.')
-        return(invisible(TRUE))
-    } else if ((length(fixed[fixed > 1]) + length(fixed[fixed < -1])) > 0) {
-        cat('<br>Error: The hypothesis matrix has a fixed value that is less than -1 or greater than 1.', sep="")
-        return(invisible(TRUE))
-    } else if (FALSE %in% ((first4columns - floor(first4columns)) == 0)) {
-        cat('<br>Error: The hypothesis matrix has a non-integer where it shouldn\'t.', sep="")
-        return(invisible(TRUE))
-    } else if (TRUE %in% (first4columns < 0)) {
-        cat('<br>Error: The hypothesis matrix has a negative number where it shouldn\'t.', sep="")
-        return(invisible(TRUE))
+    if (NA %in% hypothesis) {
+        stop("The hypothesis matrix has a missing element.")
+    } else if (!is.numeric(hypothesis)) {
+        stop('The hypothesis matrix has a non-numeric element.')
+    } else if (!all(abs(hypothesis[,5]) <= 1)) {
+        stop('The hypothesis matrix has a fixed value that is less than -1 or greater than 1.')
+    } else if (!all(hypothesis[,1:4] %% 1 == 0)) {
+        stop('The hypothesis matrix has a non-integer where it shouldn\'t.')
+    } else if (!all(hypothesis[,1:4] > 0)) {
+        stop('The hypothesis matrix has a negative or zero number where it shouldn\'t.')
+    } else if (!all(hypothesis[,1] == 1)) {
+        stop('The hypothesis matrix references a non-existent group.')
     }
 
     for (i in 1:nrow(hypothesis)) {
-        if (!(hypothesis[i,2] %in% 1:ncol(data))) {
-            cat('<br>Error: Row ', i, ' of the hypothesis matrix references a non-existent variable.', sep="")
-            return(invisible(TRUE))
-        } else  if (!(hypothesis[i,3] %in% 1:ncol(data))) {
-            cat('<br>Error: Row ', i, ' of the hypothesis matrix references a non-existent variable.', sep="")
-            return(invisible(TRUE))
+        variables <- ncol(data)
+        row.index <- hypothesis[i,2]
+        col.index <- hypothesis[i,3]
+        if (row.index > variables) {
+            stop('The hypothesis matrix references a non-existent variable.')
+        } else if (col.index > variables) {
+            stop('The hypothesis matrix references a non-existent variable.')
         }
     }
 
-	if (datatype == 'rawdata') {
-		if (nrow(data) <= ncol(data)) {
-			cat('<br>Error: Either the data matrix is a correlation matrix, or it is a raw data matrix where n <= p.', sep="")
-			return(invisible(TRUE))
-		} else if (deletion == 'pairwise') {
-			m <- data
-			data <- m[rowSums(is.na(m))!=ncol(m), ]
-			colCheck <- m[,colSums(is.na(m))!=nrow(m)]
-			if(ncol(colCheck) != ncol(m)){
-			  cat('<br>Error: The data matrix has at least one empty column.', sep="")
-			  return(invisible(TRUE))
-			}
-		}
-	}
+    rows <- nrow(data)
+    cols <- ncol(data)
 
-	if (datatype == 'correlation') {
-		if ((length(data[data > 1]) + length(data[data < -1])) > 0) {
-		  cat('<br>Error: The correlation matrix has a value that is less than -1 or greater than 1.')
-		  return(invisible(TRUE))
-		} else if (nrow(data) != ncol(data)) {
-			cat('<br>Error: The correlation matrix is not square.')
-			return(invisible(TRUE))
-		}
-	}
+    if (datatype == "rawdata") {
 
-	if (deletion == 'no') {
-		if (TRUE %in% is.na(data)) {
-			cat('<br>Error: The data matrix has at least one empty entry.', sep="")
-			return(invisible(TRUE))
-		} else if (is.numeric(data) == FALSE) {
-			cat('<br>Error: The data matrix has at least one non-numeric entry.', sep="")
-			return(invisible(TRUE))
-		}
-	}
+        if (rows <= cols) {
+            stop("A raw data matrix must have more participants than variables.")
+        }
 
-    return(invisible(FALSE))
+        if (deletion == "pairwise") {
+            R <- cor(data, use="pairwise")
+            if (NA %in% R) {
+                stop("There is too much missing data to use pairwise deletion.")
+            }
+        }
 
+        if (deletion == "nodeletion") {
+
+            if (NA %in% data) {
+                stop('Data matrix has at least one empty entry.')
+            }
+
+            if (!is.numeric(data)) {
+                stop("Data matrix has at least one non-numeric entry.")
+            }
+        }
+    }
+
+
+    if (datatype == 'correlation') {
+
+        if (!all(abs(data) <= 1)) {
+            stop('Correlation matrix has a value that is less than -1 or greater than 1.')
+        }
+
+        if (rows != cols) {
+            stop('Correlation matrix is not square.')
+        }
+    }
 }
