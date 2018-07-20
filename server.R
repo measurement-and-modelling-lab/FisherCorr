@@ -170,7 +170,7 @@ shinyServer(function(input, output, session) {
 
         ## Return significance test results
         S.result <- output[[8]]
-        if (!is.na(S.result)) {
+        if (is.matrix(S.result)) {
             header <- "Significance Test Results"
             html.output <- paste0(html.output, htmlTable(S.result, align="c", caption=header))
         }

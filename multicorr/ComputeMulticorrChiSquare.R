@@ -234,11 +234,11 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     q <- parameters.length
     p <- pchisq(chisquare, df=(k-q), lower.tail = FALSE)
     p <- round(p, 3)
-    if (p == 0) {
-        p <- '< .001'
-    }
     sigtable <- matrix(c(chisquare, k-q, p), nrow=1)
     sigtable <- round(sigtable, 3)
+    if (sigtable[1,3] == 0) {
+        sigtable[1,3] <- '< .001'
+    }
     colnames(sigtable) <- c("Chi Square", "df", "pvalue")
 
     
@@ -255,14 +255,17 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     }
     identity.matrix <- diag(k)
     if (all(test.matrix == identity.matrix)) {
-        scalc <- dget("scalc.R")
-        s2star <- dget("s2star.R")
+        scalc <- dget("./multicorr/scalc.R")
+        s2star <- dget("./multicorr/s2star.R")
         S <- scalc(R, N)
         S <- s2star(0, N, k, S)
-        S.p <- pchisq(S, df=k, lower.tail=FALSE)
-        S <- round(S, 3)
-        S.p <- round(Sp, 3)
-        S.result <- c(S, k, S.p)
+        Sp <- pchisq(S, df=k, lower.tail=FALSE)
+        S.result <- matrix(c(S, k, Sp), nrow=1, ncol=3)
+        S.result <- round(S.result, 3)
+        if (S.result[1,3] == 0) {
+            S.result[1,3] <- '< .001'
+        }
+        colnames(S.result) <- c("S", "df", "pvalue")
     } else {
         S.result <- NA
     }
