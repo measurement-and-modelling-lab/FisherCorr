@@ -41,9 +41,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
     ## Apply listwise deletion
     if (deletion == 'listwise') { ## apply listwise deletion
-        temp1 <- suppressWarnings(as.numeric(data))
-        temp1 <- matrix(temp1, nrow=nrow(data), ncol=ncol(data))
-        data <- temp1[complete.cases(temp1),]
+        data <- data[complete.cases(data),]
         N <- nrow(data)
     }
 

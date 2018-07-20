@@ -36,27 +36,26 @@ function (data, datatype, hypothesis, deletion) {
     rows <- nrow(data)
     cols <- ncol(data)
 
+    if (!is.numeric(data)) {
+        stop("Data matrix has at least one non-numeric entry.")
+    }
+
+    if (deletion == "nodeletion") {
+        if (NA %in% data) {
+            stop('Data matrix has at least one empty entry.')
+        }
+    }
+
     if (datatype == "rawdata") {
 
         if (rows <= cols) {
             stop("A raw data matrix must have more participants than variables.")
         }
 
-        if (deletion == "pairwise") {
+        if (deletion != "nodeletion") {
             R <- cor(data, use="pairwise")
             if (NA %in% R) {
-                stop("There is too much missing data to use pairwise deletion.")
-            }
-        }
-
-        if (deletion == "nodeletion") {
-
-            if (NA %in% data) {
-                stop('Data matrix has at least one empty entry.')
-            }
-
-            if (!is.numeric(data)) {
-                stop("Data matrix has at least one non-numeric entry.")
+                stop("There is too much missing data.")
             }
         }
     }
