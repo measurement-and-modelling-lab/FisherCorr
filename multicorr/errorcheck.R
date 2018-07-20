@@ -27,9 +27,11 @@ function (data, datatype, hypothesis, deletion) {
         row.index <- hypothesis[i,2]
         col.index <- hypothesis[i,3]
         if (row.index > variables) {
-            stop('The hypothesis matrix references a non-existent variable.')
+            message <- paste("Row", i, "of the hypothesis matrix references a non-existent variable.")
+            stop(message)
         } else if (col.index > variables) {
-            stop('The hypothesis matrix references a non-existent variable.')
+            message <- paste("Row", i, "of the hypothesis matrix references a non-existent variable.")
+            stop(message)
         }
     }
 
