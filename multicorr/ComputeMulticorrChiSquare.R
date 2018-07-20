@@ -13,13 +13,13 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 
     ## If the upper triangle of a correlation matrix is empty, make the matrix symmetric
-    ## Otherwise, check whether the matrix is symmetric and if so return an error
+    ## Otherwise, check whether the matrix is symmetric and if not return an error
     if (datatype == "correlation") {
-        upper.triangle <- data[upper.tri(data)]
-        lower.triangle <- data[lower.tri(data)]
-        if (all(is.na(upper.triangle))) {
-            data[upper.tri(data)] <- lower.triangle
-        } else if (!all(lower.triangle == upper.triangle)) {
+        current.upper.triangle <- data[upper.tri(data)]
+        symmetric.upper.triangle <- t(data)[upper.tri((data))]
+        if (all(is.na(current.upper.triangle))) {
+            data[upper.tri(data)] <- symmetric.upper.triangle
+        } else if (!all(current.upper.triangle == symmetric.upper.triangle)) {
             stop("Correlation matrix is not symmetric.")
         }
     }
@@ -42,24 +42,27 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         N <- hmean
     }
 
+
     ## Error checking
-    errorcheck(data, datatype, hypothesis,deletion)
+    #errorcheck(data, datatype, hypothesis,deletion)
+
 
 
     ## Renumber parameter tags if a number is skipped
     parameter.tags <- hypothesis[hypothesis[,4] != 0, 4]
-    if (length(parameter.tags) != 0) {
+    if (length(parameter.tags) > 0) {
         if (max(parameter.tags) > length(unique(parameter.tags))) {
             hypothesis[hypothesis[,4] != 0, 4] <- as.numeric(as.factor(parameter.tags))
         }
     }
 
 
-
     ## Assess multivariate normality using Yuan, Lambert & Fouladi (2004) if using pairwise deletion, Mardia (1970) otherwise
     if (datatype == 'rawdata') {
         if (deletion == 'pairwise') {
-            MardiaSK <- list(assess_range(list(data)), assess_mvn(list(data)))
+            temp <- assess_range(list(data))
+            MardiaSK <- list(temp[[1]], assess_mvn(list(data)))
+            missing <- temp[[2]]
         } else {
             MardiaSK <- MultivariateSK(list(data))
         }
@@ -82,8 +85,8 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 
     ## Check that the correlation matrices are positive definite
-    eigen_values <- eigen(R)[[1]]
-    if (TRUE %in% (eigen_values <= 0)) {
+    eigen.values <- eigen(R)[[1]]
+    if (TRUE %in% (eigen.values <= 0)) {
         stop('Data matrix is not positive definite.')
     }
 
@@ -95,20 +98,22 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     no.parameters <- max(hypothesis[,4]) == 0
 
 
-    ## getVecR
-    hypothesis_rows <- nrow(hypothesis)
+    ## Create a vector of the correlations referenced in the hypothesis
+    hypothesis.length <- nrow(hypothesis)
     correlations <- c(0)
-    for (jj in 1:hypothesis_rows) {
+    for (jj in 1:hypothesis.length) {
         j <- hypothesis[jj,2]
         k <- hypothesis[jj,3]
         correlations[jj] <- R[j,k]
     }
 
     
-    ## Create a vector of fixed values
+    ## Create a column matrix of fixed values
     hypothesis[hypothesis[,4] != 0, 5] <- 0
-    rhostar <- hypothesis[,5]
+    rhostar <- hypothesis[,5,drop=FALSE]
 
+
+    ## Create column matrix of least squares estimates
     if (no.parameters) {
         rhoLS <- rhostar
     } else {
@@ -117,10 +122,10 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     }
 
 
-    ## Create OLS matrix
+    ## Input the LS estimates into R to create the OLS matrix
     R.OLS <- R
     if (estimationmethod %in% c('TSGLS', 'TSADF')) { ## I think this conditional gives us GLS and TSGLS
-        for (jj in 1:hypothesis_rows) {
+        for (jj in 1:hypothesis.length) {
             j <- hypothesis[jj,2]
             k <- hypothesis[jj,3]
             R.OLS[j,k] <- rhoLS[jj]
@@ -130,8 +135,8 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 
     ## Calculate correlation covariance
-    Psi <- matrix(0, nrow=hypothesis_rows, ncol=hypothesis_rows)
-    for (jj in 1:hypothesis_rows) {
+    Psi <- matrix(0, nrow=hypothesis.length, ncol=hypothesis.length)
+    for (jj in 1:hypothesis.length) {
         for (kk in 1:jj) {
             j <- hypothesis[jj,2]
             k <- hypothesis[jj,3]
@@ -143,13 +148,13 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
                 term2 <- ((R.OLS[j,m] - R.OLS[j,h]*R.OLS[h,m])*(R.OLS[k,h] - R.OLS[k,j]*R.OLS[j,h]))
                 term3 <- ((R.OLS[j,h] - R.OLS[j,m]*R.OLS[m,h])*(R.OLS[k,m] - R.OLS[k,j]*R.OLS[j,m]))
                 term4 <- ((R.OLS[j,m] - R.OLS[j,k]*R.OLS[k,m])*(R.OLS[k,h] - R.OLS[k,m]*R.OLS[m,h]))
-                Psi[jj,kk] <- 0.5*(term1 + term2 + term3 + term4)
-                Psi[kk,jj] <- 0.5*(term1 + term2 + term3 + term4)
+                Psi[jj,kk] <- (0.5)*(term1 + term2 + term3 + term4)
+                Psi[kk,jj] <- (0.5)*(term1 + term2 + term3 + term4)
             } else {
                 term1 <- FRHO(j,k,h,m,moments)
-                term2 <- 1/4*R.OLS[j,k]*R.OLS[h,m]*(FRHO(j,j,h,h,moments) + FRHO(k,k,h,h,moments) + FRHO(j,j,m,m,moments) + FRHO(k,k,m,m,moments))
-                term3 <- 1/2*R.OLS[j,k]*(FRHO(j,j,h,m,moments) + FRHO(k,k,h,m,moments))
-                term4 <- 1/2*R.OLS[h,m]*(FRHO(j,k,h,h,moments) + FRHO(j,k,m,m,moments))
+                term2 <- (1/4)*R.OLS[j,k]*R.OLS[h,m]*(FRHO(j,j,h,h,moments) + FRHO(k,k,h,h,moments) + FRHO(j,j,m,m,moments) + FRHO(k,k,m,m,moments))
+                term3 <- (1/2)*R.OLS[j,k]*(FRHO(j,j,h,m,moments) + FRHO(k,k,h,m,moments))
+                term4 <- (1/2)*R.OLS[h,m]*(FRHO(j,k,h,h,moments) + FRHO(j,k,m,m,moments))
                 Psi[jj,kk] <- (term1 + term2 - term3 - term4)
                 Psi[kk,jj] <- (term1 + term2 - term3 - term4)
             }
@@ -172,7 +177,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         e <- fisherTransform(correlations) - fisherTransform(rhoGLS)
         
         ## variance of parameter tag estimates---differs from WBCORR but that might be correct
-        nMatrix <- diag(rep(N, hypothesis_rows))
+        nMatrix <- diag(rep(N, hypothesis.length))
         OmegaHatInverse <- sqrt(nMatrix)%*%solve(Psi)%*%sqrt(nMatrix)
         Psi <- t(delta)%*%OmegaHatInverse
         covgamma <- solve(Psi%*%delta)
@@ -191,7 +196,6 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             LL <- fisherTransform(point.estimate) - critical_value*sqrt(1/(N-3))
             LL <- tanh(LL)
 
-
             UL <- round(UL, 3)
             LL <- round(LL, 3)
             gammaGLS_ci[i] <- paste0('[',LL,', ',UL,']')
@@ -204,17 +208,16 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     }
 
     
-
     R.GLS <- R
-    for (jj in 1:hypothesis_rows) {
+    for (jj in 1:hypothesis.length) {
         j <- hypothesis[jj,2]
         k <- hypothesis[jj,3]
         R.GLS[j,k] <- rhoGLS[jj]
         R.GLS[k,j] <- rhoGLS[jj]
     }
 
-    SLS <- matrix(0, nrow=hypothesis_rows, ncol=hypothesis_rows)
-    for (jj in 1:hypothesis_rows) {
+    SLS <- matrix(0, nrow=hypothesis.length, ncol=hypothesis.length)
+    for (jj in 1:hypothesis.length) {
         for (kk in 1:jj) {
             j <- hypothesis[jj,2]
             k <- hypothesis[jj,3]
@@ -238,6 +241,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     sigtable <- matrix(c(chisquare, k-q, p), nrow=1)
     sigtable <- round(sigtable, 3)
     colnames(sigtable) <- c("Chi Square", "df", "pvalue")
+
     
     ## Test whether the hypothesis is the identity hypothesis
     ## If so, run superior S test
@@ -252,11 +256,10 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     }
     identity.matrix <- diag(k)
     if (all(test.matrix == identity.matrix)) {
-        identity <- TRUE
         scalc <- dget("scalc.R")
         s2star <- dget("s2star.R")
-        S <- scalc(data, N)
-        S <- s2star(0, N, nrow(data), S)
+        S <- scalc(R, N)
+        S <- s2star(0, N, k, S)
         S.p <- pchisq(S, df=k, lower.tail=FALSE)
         S <- round(S, 3)
         S.p <- round(Sp, 3)
@@ -264,7 +267,6 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     } else {
         S.result <- NA
     }
-
 
     output <- list(hypothesis, N, R, R.OLS, estimates.table, sigtable, R.GLS, S.result, MardiaSK)
 

@@ -1,4 +1,4 @@
-compute4thOrderMoments <-function( data, jj ) {
+function (data, jj) {
     n <- nrow(data)
     p <- ncol(data)
     means <- matrix(0,p,1)
