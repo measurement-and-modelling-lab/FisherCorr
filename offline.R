@@ -51,6 +51,12 @@ if (file.exists) {
 }
 
 
+## If the hypothesis matrix doesn't have a group column, add one.
+if (ncol(hypothesis) == 4) {
+    hypothesis <- cbind(1, hypothesis)
+}
+
+
 ## Generate sample size list
 if (datatype == "rawdata") {
     N <- nrow(data)

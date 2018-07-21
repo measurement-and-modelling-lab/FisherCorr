@@ -89,6 +89,12 @@ shinyServer(function(input, output, session) {
         ## Read the hypothesis file
         hypothesis <- as.matrix(read.csv(file=input$hypothesisfile[[4]], head=FALSE))
 
+        
+        ## If the hypothesis matrix doesn't have a group column, add one.
+        if (ncol(hypothesis) == 4) {
+            hypothesis <- cbind(1, hypothesis)
+        }
+
 
         ## Import N (calculate if raw data) for each group
         validate(need(input$samplesize, ""))
