@@ -1,2 +1,3 @@
- - Allow four column hypothesis matrix
- - Is "R.OLS" or "R.GLS" the one that should be printed in the output?
+ - Give variables more descriptive names
+ - The sample size for pairwise deletion is the harmonic mean of the number of non-missing scores in each column. Should this be rounded?
+ - Extend to multiple groups?
