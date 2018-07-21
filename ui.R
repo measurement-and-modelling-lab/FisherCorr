@@ -90,7 +90,7 @@ shinyUI(fluidPage(theme = "simplex.css",
         conditionalPanel(condition = "input.datatype == 'rawdata' && input.estimationmethod != 'TSGLS' && input.estimationmethod != 'GLS'", radioButtons("adfdeletion", label = "Missing values:", choices = c("There are none" = "nodeletion", "Listwise deletion" = 'listwise'))),
         fileInput("hypothesisfile", "Hypothesis file:"),
         fileInput("datafile", "Data file:"),
-        conditionalPanel(condition = "input.datatype == 'correlation'", numericInput("samplesize", "Sample size:", min=1, value=1)),
+        conditionalPanel(condition = "input.datatype == 'correlation'", numericInput("samplesize", "Sample size:", min=1, value=NULL)),
         HTML("<hr>"),
         actionButton("runButton", "Run")
     ),

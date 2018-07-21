@@ -1,4 +1,4 @@
-function (data, datatype, hypothesis, deletion) {
+function (data, datatype, hypothesis, deletion, N) {
 
     if (ncol(hypothesis) != 5) {
         stop('The hypothesis matrix has the wrong number of columns.')
@@ -51,7 +51,7 @@ function (data, datatype, hypothesis, deletion) {
     if (datatype == "rawdata") {
 
         if (rows <= cols) {
-            stop("A raw data matrix must have more participants than variables.")
+            stop("A raw data matrix must have more observations than variables.")
         }
 
         if (deletion != "nodeletion") {
@@ -64,6 +64,10 @@ function (data, datatype, hypothesis, deletion) {
 
 
     if (datatype == 'correlation') {
+
+        if (N <= cols) {
+            stop("You have as many or more variables than observations.")
+        }
 
         if (!all(abs(data) <= 1)) {
             stop('Correlation matrix has a value that is less than -1 or greater than 1.')

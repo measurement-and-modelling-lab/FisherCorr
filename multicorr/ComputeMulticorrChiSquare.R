@@ -29,7 +29,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
 
     ## Error checking
-    errorcheck(data, datatype, hypothesis, deletion)
+    errorcheck(data, datatype, hypothesis, deletion, N)
 
 
     ## Renumber parameter tags if a number is skipped
