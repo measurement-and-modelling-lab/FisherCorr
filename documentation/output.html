@@ -38,7 +38,7 @@ Input Hypothesis Matrix</td></tr>
 </tbody>
 </table>
 
-<p>The hypothesis asserts that &rho;<sub>21</sub> = &rho;<sub>31</sub> = &rho;<sub>32</sub>. Next we see the correlation matrix for each group. In this case there is only one group, so there is only one correlation matrix:</p>
+<p>The hypothesis asserts that &rho;<sub>21</sub> = &rho;<sub>31</sub> = &rho;<sub>32</sub>. Next we see the correlation matrix:</p>
 
 <table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; margin-left: 2em; ' >
 <thead>
@@ -112,7 +112,7 @@ Input Correlation Matrix #1 (N=25)</td></tr>
 </tbody>
 </table>
 
-And the matrix of OLS estimates for each group:
+And the matrix of OLS (ordinary least squares) estimates:
 
 <table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; margin-left: 2em; ' >
 <thead>
@@ -186,7 +186,9 @@ OLS Estimates Matrix #1 (N=25)</td></tr>
 </tbody>
 </table>
 
-In this case, since &rho;<sub>21</sub> = 0.109, &rho;<sub>31</sub> = 0.007, and &rho<sub>32</sub> = 0.077 are equal under the null, the OLS estimate of &rho;<sub>21</sub> = &rho;<sub>31</sub> = &rho;<sub>32</sub> is (0.109 + 0.007 + 0.077)/3 = 0.064. Next we have the parameter estimates:
+<p>The OLS matrix is null-consistent, so since the observed values of &rho;<sub>21</sub>, &rho;<sub>31</sub>, and &rho;<sub>32</sub> are 0.109, 0.007, and 0.077, and since those three are equal under the null hypothesis, therefore their OLS estimate is (0.109 + 0.007 + 0.077)/3 = 0.064.</p>
+
+<p>Next we have the GLS, TSGLS, ADF, or TSADF parameter estimates, depending on which method was selected at input:</p>
 
 <table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; margin-left: 2em; ' >
 <thead>
@@ -209,7 +211,9 @@ TSGLS Parameter Estimates</td></tr>
 </tbody>
 </table>
 
-The TSGLS estimate is &rho;<sub>21</sub> = &rho;<sub>31</sub> = &rho;<sub>32</sub> = 0.064. Note that this is a null estimate! This table also gives confidence intervals on point estimates, using a strict Bonferroni on an alpha of .05 via the Fisher transform method. Next we have the significance of the test as a whole:
+<p>The TSGLS estimate is parameter 1 = &rho;<sub>21</sub> = &rho;<sub>31</sub> = &rho;<sub>32</sub> = 0.064. As with the OLS matrix, this is a null-consistent estimate. This table also contains 95% confidence intervals on point estimates, using a strict Bonferroni. Confidence intevals are calculated using the Fisher transform method.</p>
+
+<p>Next we have the significance of the hypothesis test:</p>
 
 <table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; margin-left: 2em; ' >
 <thead>
@@ -230,9 +234,9 @@ Significance Test Results</td></tr>
 </tbody>
 </table>
 
-<p>This indicates that the probability of this sample if the null is true is 75%. Next, since we used raw data, we have the "Assessment of Multivariate Normality". The specific test will depend on 1) whether there is missing data and 2) which deletion method. Yuan, Lambert &amp; Fouladi's (2004) test is used if pairwise deletion was employed, and Mardia's (1970) is provided otherwise. Yuan, Lambert &amp; Fouladi's (2004) test is only useable if the observed marginals do not sit in a restricted range, so a test of that assumption is provided for each variable with missing data. This is only possible if there is at least one variable without missing data.</p>
+<p>And finally, since we used raw data, we have the test of multivariate normality. The specific test will depend on 1) whether there is missing data and 2) which deletion method was employed. Yuan, Lambert &amp; Fouladi's (2004) test is given if pairwise deletion was chosen, and Mardia's (1970) is provided otherwise. Yuan, Lambert &amp; Fouladi's (2004) test is only useable if the observed marginals of the incomplete variables do not sit in a restricted range, and a test of that assumption is provided as well. This is only possible if there is at least one variable without missing data.</p>
 
-<p>Since the example data is complete, Mardia's (1970) test is used:</p>
+<p>Since the example data is complete, Mardia's (1970) test is given:</p>
 
 <table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; margin-left: 2em; ' >
 <thead>
@@ -305,7 +309,7 @@ Assessment of the Distribution of the Observed Marginals</td></tr>
 </tbody>
 </table>
 
-<p>The p value is high, so the observed marginals do not appear to be restricted and we can move on to the assessment of multivariate normality:</p>
+<p>The p value is high, so the range of the observed marginals does not appear to be restricted and we can move on to the assessment of multivariate normality:</p>
 
 <table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; margin-left: 2em; ' >
 <thead>
@@ -326,4 +330,4 @@ Assessment of Multivariate Normality</td></tr>
 </tbody>
 </table>
 
-<p>Again, the p value is low, so multivariate normality is not supported and we should re-run the test using TSADF.</p>
+<p>Again the p value is low, so multivariate normality is not supported and we should re-run the test using TSADF.</p>

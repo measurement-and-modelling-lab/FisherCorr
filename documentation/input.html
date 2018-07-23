@@ -1,10 +1,10 @@
 <br>
 <p>
-  Input consists of a hypothesis matrix and a raw or correlation data file. Input files should be in headerless, comma-separated (.csv) format. The "CSV Generator" linked in the header bar is a web application for creating properly-formatted input.
+  Input consists of a hypothesis matrix and a raw or correlation data matrix. Input files should be in headerless, comma-separated (.csv) format. The "CSV Generator" in the header bar is a web application for creating properly-formatted correlation matrices, as well as one to two group hypothesis matrices.
 </p>
 
 <p>
-  Here are six lines from a possible raw data file:
+  Here are five lines from a possible raw data file:
 </p>
 
 <pre class="example" style="margin-left:40px">
@@ -16,7 +16,11 @@
 </pre>
 
 <p>
-  Each row is a participant or observation, and each column is a variable. Note the absence of an ID column, which would be interpreted as a variable. Here is a sample correlation data file:
+  Each row is a participant or observation, and each column is a variable. Note the absence of an ID column, which would be interpreted as a variable.
+</p>
+
+<p>
+  Here is a sample correlation data file:
 </p>
 
 <pre class="example" style="margin-left:40px">
@@ -26,7 +30,7 @@
 </pre>
 
 <p>
-  Data from the upper half of the correlation matrix is optional. In SPSS, you can produce a plain correlation matrix using the following syntax:
+  Data from the upper half of the correlation matrix is optional. In SPSS, you can produce a plain correlation matrix such as this using the following syntax:
 </p>
 
 <pre class="example" style="margin-left:40px">
@@ -51,19 +55,19 @@
 </pre>
 
 <p>
-  You can also use a WBCORR (see the header bar) style hypothesis file with a group column, which would merely add a column of 1s to the beginning of this matrix. This is what that hypothesis would look like in the CSV Generator, which is in WBCORR format:
+  Each row of the hypothesis matrix is of the form: row, column, parameter tag, fixed value. The first two columns specify a correlation, conventionally from the lower half of the correlation matrix, and the third and fourth make an assertion about the value of that correlation. Correlations with the same positive integer in the parameter tag column are hypothesised to be equal, and correlations with a parameter tag of 0 are hypothesised to be equal to the value of their fixed value column. Correlations with different parameter tags are not hypothesised to be unequal. If a parameter tag is assigned to a single correlation then the output will include an estimate of that correlation, but the p value for the test will be the same as if it hadn't been included.
+</p>
+
+<p>
+  You can also use an MML-WBCORR (see the header bar) style hypothesis file, which has a group column at the beginning of the matrix. Since MML-Multicorr is restricted to the one group case, this merely adds a column of ones to the beginning of the matrix. This is what the above hypothesis would look like in the CSV Generator, which uses WBCORR format:
 </p>
 
 <img src="./hypothesis.png", style="margin-bottom: 10px; margin-top: 10px; margin-left:40px">
 
 <p>
-  Each row of the hypothesis matrix is of the form: row, column, parameter tag, fixed value. The first two columns specify a correlation, conventionally from the lower half of the correlation matrix, and the third and fourth make an assertion about the value of that correlation. Correlations with the same positive integer in the parameter tag column are hypothesised to be equal, and correlations with a parameter tag of 0 are hypothesised to be equal to the value of their fixed value column. Correlations with different parameter tags are not hypothesised to be unequal. If a parameter tag is assigned to a single correlation then the output will include an estimate of that correlation, but the p value for the test will be the same as if it hadn't been included.
+  Let's break down this hypothesis. The first two columns specify the correlation at row 2 of column 1 (&rho;<sub>21</sub>). Put differently, they pick out the correlation between variable 2 and variable 1. This correlation has a parameter tag of 1, so it is hypothesised to be equal to the correlation picked out by the second row, which also has a parameter tag of 1. On the other hand, the correlation in the third row, since its parameter tag is 0, is hypothesised to be equal to 0.2. Finally, the correlation identified by the fourth row is the only correlation with a parameter tag of 2, so it does not figure into the hypothesis at all. Effectively, the hypothesis says: (&rho;<sub>21</sub> = &rho;<sub>31</sub>) &amp; (&rho;<sub>32</sub> = 0.2).
 </p>
 
 <p>
-  Take the first row of the sample hypothesis matrix. The first two columns specify the correlation at row 2 of column 1 (&rho;<sub>21</sub>). Put differently, they pick out the correlation between variable 2 and variable 1. This correlation has a parameter tag of 1, so it is hypothesised to be equal to the correlation picked out by the second row, which also has a parameter tag of 1. On the other hand, the correlation in the third row, since its parameter tag is 0, is hypothesised to be equal to 0.2. Finally, the correlation in the fourth row is the only correlation with a parameter tag of 2, so it does not figure into the hypothesis at all. Effectively, the hypothesis says: (&rho;<sub>21</sub> = &rho;<sub>31</sub>) &amp; (&rho;<sub>32</sub> = 0.2).
-</p>
-
-<p>
-  The parameter tag column has a "hole" in it if the value of the greatest parameter tag is not equal to the number of unique non-zero parameter tags. For example, if the parameter tag column were [1, 1, 2, 2, 4, 4], then it would have a hole because 3 is skipped. If the column has a hole then it is renumbered. This does not affect the result of the test, and the amended hypothesis matrix is included in the output.
+  A parameter tag column has a "hole" in it if the value of the greatest parameter tag is not equal to the number of unique non-zero parameter tags. For example, if the parameter tag column were [1, 1, 2, 2, 4, 4], then it would have a hole because 3 is skipped. If the column has a hole then it is renumbered, in this case to [1, 1, 2, 2, 3, 3]. This does not affect the result of the test, and the amended hypothesis matrix is included in the output.
 </p>
