@@ -59,6 +59,7 @@ shinyServer(function(input, output, session) {
         ## Import data files
         validate(need("input$datafile", "")) ## Check that data file i exists
 
+
         ## Check that R can read the data file as a .csv
         tryCatch({
             read.csv(file=input$datafile[[4]], head=FALSE)
@@ -70,10 +71,11 @@ shinyServer(function(input, output, session) {
 
         data <- as.matrix(read.csv(file=input$datafile[[4]], head=FALSE))
 
+        
+
         if (ncol(data) > 16) {
             stop("The web version of MML-Multicorr does not support more than 16 variables.")
         }
-
 
         ## Check that hypothesis file is readable as a .csv
         validate(need(input$hypothesisfile, ""))
@@ -88,8 +90,8 @@ shinyServer(function(input, output, session) {
 
         ## Read the hypothesis file
         hypothesis <- as.matrix(read.csv(file=input$hypothesisfile[[4]], head=FALSE))
-
         
+
         ## If the hypothesis matrix doesn't have a group column, add one.
         if (ncol(hypothesis) == 4) {
             hypothesis <- cbind(1, hypothesis)
@@ -97,8 +99,8 @@ shinyServer(function(input, output, session) {
 
 
         ## Import N (calculate if raw data) for each group
-        validate(need(input$samplesize, ""))
         if (datatype == "correlation") {
+            validate(need(input$samplesize, ""))
             N <- input$samplesize
         } else {
             N <- nrow(data)
