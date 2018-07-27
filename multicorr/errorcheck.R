@@ -1,7 +1,12 @@
 function (data, datatype, hypothesis, deletion, N) {
 
     if (ncol(hypothesis) != 5) {
-        stop('The hypothesis matrix has the wrong number of columns.')
+        stop("The hypothesis matrix has the wrong number of columns.")
+    }
+
+    ## There must be at least one fixed value hypothesis or one relational hypothesis
+    if (!(0 %in% hypothesis[,4] || TRUE %in% duplicated(hypothesis[,4]))) {
+        stop("The hypothesis matrix doesn't assert a testable hypothesis.")
     }
 
     if (NA %in% hypothesis) {
@@ -18,7 +23,7 @@ function (data, datatype, hypothesis, deletion, N) {
         stop('The parameter tag column of the hypothesis matrix has a negative number.')
     } else if (!all(hypothesis[,1] == 1)) {
         stop('The hypothesis matrix references a non-existent group.')
-    } else if (TRUE %in% duplicated(hypothesis[,1:3])) {
+    } else if (TRUE %in% duplicated(hypothesis[,2:3])) {
         stop('The hypothesis matrix references the same correlation twice.')
     }
 
@@ -57,7 +62,7 @@ function (data, datatype, hypothesis, deletion, N) {
         if (deletion != "nodeletion") {
             R <- cor(data, use="pairwise")
             if (NA %in% R) {
-                stop("There is too much missing data.")
+                stop("There is too much missing data to proceed.")
             }
         }
     }

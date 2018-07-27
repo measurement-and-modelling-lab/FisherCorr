@@ -1,3 +1,6 @@
+ - Specify confidence level in estimates table
+ - Blank hypotheses
+ - Add line break at the end of .csv files before importing them?
  - Give variables more descriptive names
  - The sample size for pairwise deletion is the harmonic mean of the number of non-missing scores in each column. Should this be rounded?
  - Extend to multiple groups?
