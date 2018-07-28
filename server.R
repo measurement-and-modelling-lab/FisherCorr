@@ -56,21 +56,19 @@ shinyServer(function(input, output, session) {
         estimation.method <- input$estimationmethod
 
 
-        ## Import data files
-        validate(need("input$datafile", "")) ## Check that data file i exists
+        ## Check that the data file exists
+        validate(need("input$datafile", "")) 
 
 
-        ## Check that R can read the data file as a .csv
+        ## Try to import the data file, return an error if it's not readable as aa .csv
+        cat("\n", file=input$datafile[[4]], append = TRUE) ## append the necessary line break to the end
         tryCatch({
-            read.csv(file=input$datafile[[4]], head=FALSE)
+            data <- as.matrix(read.csv(file=input$datafile[[4]], head=FALSE))
         }, warning = function(w) {
-            stop("There was a problem reading one of your .csv files. You may need to add a blank line to the end of the file.")
+            stop("There was a problem reading one of your .csv files.")
         }, error = function(e) {
-            stop("There was a problem reading one of your .csv files. You may need to add a blank line to the end of the file.")
+            stop("There was a problem reading one of your .csv files.")
         })
-
-        data <- as.matrix(read.csv(file=input$datafile[[4]], head=FALSE))
-
         
 
         if (ncol(data) > 16) {
@@ -79,12 +77,13 @@ shinyServer(function(input, output, session) {
 
         ## Check that hypothesis file is readable as a .csv
         validate(need(input$hypothesisfile, ""))
+        cat("\n", file=input$hypothesisfile[[4]], append = TRUE) ## append the necessary line break to the end
         tryCatch({
             read.csv(file=input$hypothesisfile[[4]], head=FALSE)
         }, warning = function(w) {
-            stop("There was a problem reading your hypothesis file. You may need to add a blank line to the end of the file.")
+            stop("There was a problem reading your hypothesis file.")
         }, error = function(e) {
-            stop("There was a problem reading your hypothesis file. You may need to add a blank line to the end of the file.")
+            stop("There was a problem reading your hypothesis file.")
         })
 
 

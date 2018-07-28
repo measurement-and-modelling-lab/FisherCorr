@@ -181,9 +181,11 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             critical_value <- qnorm(1-corrected_alpha/2)
             point.estimate <- gammaGLS[i]
 
-            UL <- fisherTransform(point.estimate) + critical_value*sqrt(1/(N-3))
+            weight <- nrow(hypothesis[hypothesis[,4] == parameter,])
+
+            UL <- fisherTransform(point.estimate) + critical_value*sqrt(1/(weight*N-3))
             UL <- tanh(UL)
-            LL <- fisherTransform(point.estimate) - critical_value*sqrt(1/(N-3))
+            LL <- fisherTransform(point.estimate) - critical_value*sqrt(1/(weight*N-3))
             LL <- tanh(LL)
 
             UL <- round(UL, 3)
@@ -194,7 +196,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             covgamma <- round(covgamma, 3)
             gammaGLS <- round(gammaGLS, 3)
             estimates.table <- cbind(parameters, gammaGLS, covgamma, gammaGLS_ci)
-            colnames(estimates.table) <- c("Parameter Tags", "Point Estimate", "Std. Error", "Confidence Interval")
+            colnames(estimates.table) <- c("Parameter Tags", "Point Estimate", "Std. Error", paste0(100 - corrected_alpha * 100, "% Confidence Interval"))
     }
 
 
