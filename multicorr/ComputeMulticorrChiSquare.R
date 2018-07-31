@@ -182,8 +182,10 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
             corrected_alpha <- 0.05/parameters.length
             critical_value <- qnorm(1-corrected_alpha/2)
 
-            weight <- nrow(hypothesis[hypothesis[,4] == parameter,])
+            weight <- length(hypothesis[hypothesis[,4] == parameter, 4])
 
+            print(gammaGLS[p])
+            print(weight)
             lower.limit[p] <- ConfidenceInterval(gammaGLS[p], -critical_value, weight*N)
             upper.limit[p] <- ConfidenceInterval(gammaGLS[p], critical_value, weight*N)
 

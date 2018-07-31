@@ -1,6 +1,7 @@
 ## ## Load functions
 ComputeMulticorrChiSquare <- dget("./multicorr/ComputeMulticorrChiSquare.R")
 tablegen <- dget("./multicorr/tablegen.R")
+RoundPercentile <- dget("./multicorr/RoundPercentile.R")
 
 
 ## Stipulate data type
@@ -128,6 +129,7 @@ tablegen(R.OLS, FALSE)
 
 ## Print the parameter estimates
 estimates.table <- output[[5]]
+estimates.table <- round(estimates.table, 3)
 if (!identical(NA, estimates.table)) {
     cat("\n", estimation.method, "Parameter Estimates\n\n")
     tablegen(estimates.table, TRUE)
@@ -136,6 +138,9 @@ if (!identical(NA, estimates.table)) {
 
 ## Print the significance of the test
 sigtable <- output[[6]]
+sigtable[,1] <- round(sigtable[,1], 3)
+sigtable[,3] <- RoundPercentile(sigtable[,3])
+
 cat("\nSignificance Test Results\n\n")
 tablegen(sigtable, TRUE)
 
@@ -143,6 +148,8 @@ tablegen(sigtable, TRUE)
 ## Print the significance of S test
 S.result <- output[[6]]
 if (is.matrix(S.result)) {
+    S.result[,1] <- round(S.result[,1], 3)
+    S.result[,3] <- RoundPercentile(S.result[,3])
     cat("\nSignificance Test Results\n\n")
     tablegen(S.result, TRUE)
 }
@@ -152,14 +159,34 @@ if (is.matrix(S.result)) {
 if (datatype == "rawdata") {
     MardiaSK <- output[[8]]
     if (deletion == "pairwise") {
+
+        range.table <- MardiaSK[[1]]
+        range.table[,4] <- round(range.table[,4], 3)
+        range.table[,5] <- RoundPercentile(range.table[,5])
+
+        normality.table <- MardiaSK[[2]]
+        normality.table[,2] <- round(normality.table[,2], 3)
+        normality.table[,3] <- RoundPercentile(normality.table[,3])
+        
         cat("\nAssessment of the Distribution of the Observed Marginals\n\n\n")
-        tablegen(MardiaSK[[1]], TRUE)
+        tablegen(range.table, TRUE)
+
         cat("\nAssessment of Multivariate Normality\n\n")
-        tablegen(MardiaSK[[2]], TRUE)
+        tablegen(normality.table, TRUE)
+
     } else {
+
+        skew.table <- MardiaSK[[1]]
+        skew.table[,-5] <- round(skew.table[,-5], 3)
+        skew.table[,5] <- RoundPercentile(skew.table[,5])
+
+        kurt.table <- MardiaSK[[2]]
+        kurt.table[,-4] <- round(kurt.table[,-4], 3)
+        kurt.table[,4] <- RoundPercentile(kurt.table[,4])
+        
         cat("\nAssessment of Multivariate Normality\n\n")
-        tablegen(MardiaSK[[1]], TRUE)
+        tablegen(skew.table, TRUE)
         cat("\n")
-        tablegen(MardiaSK[[2]], TRUE)
+        tablegen(kurt.table, TRUE)
     }
 }
