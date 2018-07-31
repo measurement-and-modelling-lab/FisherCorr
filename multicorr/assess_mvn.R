@@ -1,6 +1,5 @@
 function (data) {
 
-
     m2_table <- list()
 
     for (jj in 1:length(data)) {
@@ -24,10 +23,7 @@ function (data) {
             p_m2 <- 2*pnorm(M2)
         }
 
-        ## Round and assemble output
-        source("./multicorr/pRound.R")
-        M2 <- round(M2, 3)
-        p_m2 <- pRound(p_m2)
+        ## Assemble output
         m2_table[[jj]] <- c(jj, M2, p_m2)
     }
 
@@ -36,5 +32,3 @@ function (data) {
 
     return(m2_table)
 }
-
-

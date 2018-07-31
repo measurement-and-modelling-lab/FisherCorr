@@ -25,7 +25,7 @@ function (data) {
         while (length(incomplete)*length(complete) > 0) {
 
             pair <- cbind(incomplete[,1], complete[,1])
-            variable <- colnames(incomplete)[[1]]
+            variable <- as.numeric(colnames(incomplete)[[1]])
             incomplete <- incomplete[,-1]
 
             ## take the absolute deviation of each score from the mean of its column
@@ -51,16 +51,14 @@ function (data) {
                 p_zr <- 2*pnorm(zr)
             }
 
-            ## Round and assemble row
-            source("./multicorr/pRound.R")
-            zr <- round(zr, 3)
-            p_zr <- pRound(p_zr)
+            ## Assemble row
             zr_table[[jj]] <- c(jj, variable, i_n, zr, p_zr)
 
         }
     }
 
     zr_table <- do.call(rbind, zr_table)
+
     colnames(zr_table) <- c('Group','Variable','Missing values','Z<sub>R</sub>', 'plevel (two-tail)')
 
     return(list(zr_table, missing))

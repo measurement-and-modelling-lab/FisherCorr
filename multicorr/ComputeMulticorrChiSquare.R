@@ -13,7 +13,7 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
     MultivariateSK <- dget("./multicorr/MultivariateSK.R")
     adfCov <- dget("./multicorr/adfCov.R")
     nCov <- dget("./multicorr/nCov.R")
-
+    ConfidenceInterval <- dget("./multicorr/ConfidenceInterval.R")
 
     ## If the upper triangle of a correlation matrix is empty, make the matrix symmetric
     ## Otherwise, check whether the matrix is symmetric and if not return an error
@@ -174,29 +174,22 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
         covgamma <- covgamma[,1]
 
         ## Confidence interval calculation
-        gammaGLS_ci <- c()
-        for (i in 1:parameters.length) {
-            parameter <- parameters[i]
+	lower.limit <- c()
+        upper.limit <- c()
+        for (p in 1:parameters.length) {
+
+            parameter <- parameters[p]
             corrected_alpha <- 0.05/parameters.length
             critical_value <- qnorm(1-corrected_alpha/2)
-            point.estimate <- gammaGLS[i]
 
             weight <- nrow(hypothesis[hypothesis[,4] == parameter,])
 
-            UL <- fisherTransform(point.estimate) + critical_value*sqrt(1/(weight*N-3))
-            UL <- tanh(UL)
-            LL <- fisherTransform(point.estimate) - critical_value*sqrt(1/(weight*N-3))
-            LL <- tanh(LL)
-
-            UL <- round(UL, 3)
-            LL <- round(LL, 3)
-            gammaGLS_ci[i] <- paste0('[',LL,', ',UL,']')
+            lower.limit[p] <- ConfidenceInterval(gammaGLS[p], -critical_value, weight*N)
+            upper.limit[p] <- ConfidenceInterval(gammaGLS[p], critical_value, weight*N)
 
         }
-            covgamma <- round(covgamma, 3)
-            gammaGLS <- round(gammaGLS, 3)
-            estimates.table <- cbind(parameters, gammaGLS, covgamma, gammaGLS_ci)
-            colnames(estimates.table) <- c("Parameter Tags", "Point Estimate", "Std. Error", paste0(100 - corrected_alpha * 100, "% Confidence Interval"))
+            estimates.table <- cbind(parameters, lower.limit, gammaGLS, upper.limit, covgamma)
+            colnames(estimates.table) <- c("Parameter Tags", "Lower Limit*", "Point Estimate", "Upper Limit*", "Std. Error")
     }
 
 
@@ -230,8 +223,6 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
     ## Round and assemble output
     source("./multicorr/pRound.R")
-    chisquare <- round(chisquare, 3)
-    p <- pRound(p)
     sigtable <- matrix(c(chisquare, k-q, p), nrow=1)
     colnames(sigtable) <- c("Chi Square", "df", "pvalue")
 
@@ -250,9 +241,6 @@ function (data, N, hypothesis, datatype, estimationmethod, deletion) {
 
         ## Round and assemble output
         source("./multicorr/pRound.R")
-        S <- round(S, 3)
-        k <- round(k, 3)
-        Sp <- pRound(Sp)
         S.result <- matrix(c(S, k, Sp), nrow=1, ncol=3)
         colnames(S.result) <- c("S", "df", "pvalue")
 
