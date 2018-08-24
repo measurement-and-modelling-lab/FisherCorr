@@ -1,6 +1,4 @@
- - Fix offline version's rounding
  - Is Mardia's skewness test two-tailed? Do we even need to specify?
- - Extend error checking during data import to offline version
  - Give variables more descriptive names
  - The sample size for pairwise deletion is the harmonic mean of the number of non-missing scores in each column. Should this be rounded?
  - Extend to multiple groups?
