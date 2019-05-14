@@ -20,6 +20,7 @@ shinyUI(fluidPage(theme = "simplex.css",
     &emsp;&nbsp;<a href="https://shiny.rcg.sfu.ca/u/pserafin/MML-Multicorr/"><font color="#00ca8a">MML-Multicorr</font></a>
     &emsp;&nbsp;<a href="https://shiny.rcg.sfu.ca/u/pserafin/MML-WBCORR/"><font color="white">MML-WBCORR</font></a>
     &emsp;&nbsp;<a href="https://shiny.rcg.sfu.ca/u/pserafin/csv-generator/"><font color="white">CSV Generator</font></a>
+    &emsp;&nbsp;<a href="http://members.psyc.sfu.ca/labs/mml/research"><font color="white">Distribution Tests</font></a>
 
 
 
@@ -98,10 +99,10 @@ shinyUI(fluidPage(theme = "simplex.css",
     mainPanel(
       tabsetPanel(
         id = "inTabset",
+        tabPanel(value = "out", "Output", uiOutput("finaloutput")),
         tabPanel(value = "readme1", "Formatting input", includeHTML("./documentation/input.html")),
         tabPanel(value = "readme2", "Choosing a method", includeHTML("./documentation/method.html")),
-        tabPanel(value = "readme3", "Interpreting output", includeHTML("./documentation/output.html")),
-        tabPanel(value = "out", "Output", uiOutput("finaloutput"))
+        tabPanel(value = "readme3", "Interpreting output", includeHTML("./documentation/output.html"))
       )
       )),
     HTML('<br>'),
