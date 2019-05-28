@@ -118,7 +118,8 @@ function myFunction() {
                         tabPanel(value = "out", "Output", uiOutput("finaloutput")),
                         tabPanel(value = "readme1", "Formatting input", includeHTML("./documentation/input.html")),
                         tabPanel(value = "readme2", "Choosing a method", includeHTML("./documentation/method.html")),
-                        tabPanel(value = "readme3", "Interpreting output", includeHTML("./documentation/output.html"))
+                        tabPanel(value = "readme3", "Interpreting output", includeHTML("./documentation/output.html")),
+                        tabPanel(value = "readme4", "About", includeHTML("./documentation/about.html"))
                       )
                     )),
                   HTML('<br>'),
